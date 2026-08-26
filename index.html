@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feedback de Funcionários</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink: #f2f4f5;
+    --ink-dim: #b9c2c8;
+    --up: #6fae8c;
+    --up-bg: rgba(111,174,140,0.16);
+    --down: #c07a6b;
+    --down-bg: rgba(192,122,107,0.16);
+    --line: rgba(255,255,255,0.14);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    min-height:100vh;
+    background:#050807;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root{
+    position: relative;
+    min-height: 100vh;
+    isolation: isolate;
+  }
+
+  .bg-scene{
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+  .bg-scene img{
+    width:100%; height:100%;
+    object-fit: cover;
+    display:block;
+  }
+  .bg-scene::after{
+    content:"";
+    position:absolute; inset:0;
+    background: rgba(0,0,0,0.28);
+  }
+
+  .page{
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 90px;
+  }
+
+  header{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  header h1{
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+  }
+  header .sub{
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+
+  nav.tabs{
+    display:flex;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  nav.tabs a{
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-dim);
+    text-decoration: none;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  nav.tabs a.active{
+    color: #0a0f0d;
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .list{
+    display:flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .employee-row{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    text-decoration:none;
+    color: var(--ink);
+  }
+
+  .employee-row .who{ display:flex; align-items:center; gap:14px; }
+
+  .avatar{
+    width: 42px; height:42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    display:flex; align-items:center; justify-content:center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink:0;
+  }
+
+  .employee-name{ font-size: 16px; font-weight: 600; margin:0; }
+  .employee-role{ font-size: 12.5px; color: var(--ink-dim); margin: 2px 0 0; }
+
+  .counts{ display:flex; gap:8px; flex-shrink:0; }
+  .pill{
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 999px;
+    display:flex; align-items:center; gap:4px;
+  }
+  .pill.up{ color: var(--up); background: var(--up-bg); }
+  .pill.down{ color: var(--down); background: var(--down-bg); }
+
+  /* fallback: se o WebGL não iniciar, os cards ficam com fundo sólido simples */
+  .glass-fallback{
+    background: rgba(20,24,22,0.55);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    backdrop-filter: blur(6px);
+  }
+
+  .board-cta{
+    margin-top: 20px;
+    padding: 18px 20px;
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    text-decoration:none;
+    color: var(--ink);
+  }
+  .board-cta strong{ font-size: 14.5px; }
+  .board-cta span{ font-size: 12.5px; color: var(--ink-dim); }
+  .board-cta .arrow{ font-size: 18px; }
+
+  footer{
+    margin-top: 40px;
+    font-size: 11.5px;
+    color: var(--ink-dim);
+    text-align:center;
+  }
+
+  .glass-layer > *{
+    pointer-events: auto;
+  }
+</style>
+</head>
+<body>
+
+<div id="root">
+
+  <div class="bg-scene">
+    <img src="assets/bg.jpg" alt="">
+  </div>
+
+  <div class="page">
+
+    <header>
+      <div>
+        <h1>Feedback de Funcionários</h1>
+        <div class="sub">3 cadastrados</div>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <a href="index.html" class="active">Funcionários</a>
+      <a href="mural.html">Mural</a>
+    </nav>
+
+    <!-- slots invisíveis: ficam no fluxo normal só pra reservar o espaço.
+         os cards de vidro de verdade vivem em #glassLayer (ver abaixo) e
+         são posicionados por cima deles via JS -->
+    <div class="list" id="cardSlots">
+      <div class="slot" data-id="1"></div>
+      <div class="slot" data-id="2"></div>
+      <div class="slot" data-id="3"></div>
+    </div>
+
+    <div class="slot-cta" id="ctaSlot"></div>
+
+    <footer>Uso interno — protótipo</footer>
+  </div>
+
+  <!-- camada onde os cards de vidro (glass) de fato vivem: precisam ser
+       filhos diretos de #root, exigência da lib liquidglass -->
+  <div class="glass-layer" id="glassLayer" style="position:absolute; top:0; left:0; width:100%; z-index:2;"></div>
+
+</div>
+
+<script type="module">
+  import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
+
+  const employees = [
+    { id:1, name:'Leandro', role:'Atendente — Balcão', up:9, down:2 },
+    { id:2, name:'James',   role:'Suporte técnico N2', up:14, down:1 },
+    { id:3, name:'Álvaro',  role:'Coordenador de entregas', up:5, down:6 },
+  ];
+
+  function initials(name){ return name.slice(0,1).toUpperCase(); }
+
+  function buildCard(emp){
+    const a = document.createElement('a');
+    a.href = `funcionario.html?id=${emp.id}`;
+    a.className = 'employee-row glass-fallback';
+    a.dataset.config = JSON.stringify({
+      blurAmount: 0.3, refraction: 0.5, cornerRadius: 14,
+      chromAberration: 0.03, edgeHighlight: 0.06, shadowOpacity: 0.3
+    });
+    a.innerHTML = `
+      <div class="who">
+        <div class="avatar">${initials(emp.name)}</div>
+        <div>
+          <p class="employee-name">${emp.name}</p>
+          <p class="employee-role">${emp.role}</p>
+        </div>
+      </div>
+      <div class="counts">
+        <span class="pill up">▲ ${emp.up}</span>
+        <span class="pill down">▼ ${emp.down}</span>
+      </div>
+    `;
+    return a;
+  }
+
+  function buildCta(){
+    const a = document.createElement('a');
+    a.href = 'mural.html';
+    a.className = 'board-cta glass-fallback';
+    a.dataset.config = JSON.stringify({
+      blurAmount: 0.3, refraction: 0.5, cornerRadius: 14,
+      chromAberration: 0.03, edgeHighlight: 0.06, shadowOpacity: 0.3
+    });
+    a.innerHTML = `
+      <div>
+        <strong>Ver todos os feedbacks</strong><br>
+        <span>Mural geral, mais recentes primeiro</span>
+      </div>
+      <span class="arrow">→</span>
+    `;
+    return a;
+  }
+
+  function positionOverSlot(glassEl, slotEl){
+    const slotRect = slotEl.getBoundingClientRect();
+    const rootRect = document.querySelector('#root').getBoundingClientRect();
+    glassEl.style.position = 'absolute';
+    glassEl.style.top = (slotRect.top - rootRect.top + window.scrollY) + 'px';
+    glassEl.style.left = (slotRect.left - rootRect.left) + 'px';
+    glassEl.style.width = slotRect.width + 'px';
+  }
+
+  const glassLayer = document.getElementById('glassLayer');
+  const cardEls = [];
+  const slotEls = document.querySelectorAll('.slot');
+
+  employees.forEach((emp, i) => {
+    const card = buildCard(emp);
+    glassLayer.appendChild(card);
+    cardEls.push({ el: card, slot: slotEls[i] });
+  });
+
+  const ctaSlot = document.getElementById('ctaSlot');
+  const ctaCard = buildCta();
+  glassLayer.appendChild(ctaCard);
+  cardEls.push({ el: ctaCard, slot: ctaSlot });
+
+  function syncPositions(){
+    // 1a passada: mede altura real dos cards e aplica nos slots (empurra o layout)
+    cardEls.forEach(({el, slot}) => { slot.style.height = el.offsetHeight + 'px'; });
+    // 2a passada: agora que os slots têm a altura certa, alinha os cards sobre eles
+    cardEls.forEach(({el, slot}) => positionOverSlot(el, slot));
+  }
+
+  window.addEventListener('load', async () => {
+    syncPositions();
+    window.addEventListener('resize', syncPositions);
+
+    try {
+      const instance = await LiquidGlass.init({
+        root: document.querySelector('#root'),
+        glassElements: cardEls.map(c => c.el),
+        defaults: {
+          blurAmount: 0.3,
+          refraction: 0.5,
+          cornerRadius: 14,
+          fresnel: 0.7,
+          shadowOpacity: 0.3,
+          shadowSpread: 12,
+        }
+      });
+      cardEls.forEach(({el}) => el.classList.remove('glass-fallback'));
+      window.addEventListener('resize', () => instance.markChanged());
+    } catch (err) {
+      console.warn('LiquidGlass não iniciou, usando fallback.', err);
+    }
+  });
+</script>
+
+</body>
+</html>

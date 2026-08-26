@@ -168,9 +168,6 @@
     text-align:center;
   }
 
-  .glass-layer > *{
-    pointer-events: auto;
-  }
 </style>
 </head>
 <body>
@@ -196,8 +193,8 @@
     </nav>
 
     <!-- slots invisíveis: ficam no fluxo normal só pra reservar o espaço.
-         os cards de vidro de verdade vivem em #glassLayer (ver abaixo) e
-         são posicionados por cima deles via JS -->
+         os cards de vidro de verdade são injetados como filhos diretos de
+         #root pelo JS, e posicionados por cima destes slots via absolute -->
     <div class="list" id="cardSlots">
       <div class="slot" data-id="1"></div>
       <div class="slot" data-id="2"></div>
@@ -209,9 +206,8 @@
     <footer>Uso interno — protótipo</footer>
   </div>
 
-  <!-- camada onde os cards de vidro (glass) de fato vivem: precisam ser
-       filhos diretos de #root, exigência da lib liquidglass -->
-  <div class="glass-layer" id="glassLayer" style="position:absolute; top:0; left:0; width:100%; z-index:2;"></div>
+  <!-- os cards de vidro (glass) são injetados aqui via JS, direto como
+       filhos de #root (não dentro de nenhuma div extra) — exigência da lib -->
 
 </div>
 
@@ -275,21 +271,22 @@
     glassEl.style.top = (slotRect.top - rootRect.top + window.scrollY) + 'px';
     glassEl.style.left = (slotRect.left - rootRect.left) + 'px';
     glassEl.style.width = slotRect.width + 'px';
+    glassEl.style.zIndex = '2';
   }
 
-  const glassLayer = document.getElementById('glassLayer');
+  const rootEl = document.querySelector('#root');
   const cardEls = [];
   const slotEls = document.querySelectorAll('.slot');
 
   employees.forEach((emp, i) => {
     const card = buildCard(emp);
-    glassLayer.appendChild(card);
+    rootEl.appendChild(card); // filho direto de #root, exigência da lib
     cardEls.push({ el: card, slot: slotEls[i] });
   });
 
   const ctaSlot = document.getElementById('ctaSlot');
   const ctaCard = buildCta();
-  glassLayer.appendChild(ctaCard);
+  rootEl.appendChild(ctaCard); // filho direto de #root
   cardEls.push({ el: ctaCard, slot: ctaSlot });
 
   function syncPositions(){

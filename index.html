@@ -116,7 +116,7 @@ const employees = [
   {id:9,name:'Gabriel',role:'Auxiliar Contábil',up:0,down:0},
 ];
 
-const cfg = JSON.stringify({blurAmount:0.3,refraction:0.5,cornerRadius:12,chromAberration:0.03,edgeHighlight:0.06,shadowOpacity:0.3});
+const cfg = JSON.stringify({blurAmount:0,refraction:0.69,cornerRadius:20,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.3});
 
 function card(e){
   const a = document.createElement('a');
@@ -169,7 +169,7 @@ window.addEventListener('load', async () => {
     const instance = await LiquidGlass.init({
       root,
       glassElements: glassEls,
-      defaults:{blurAmount:0.3,refraction:0.5,cornerRadius:12,fresnel:0.7,shadowOpacity:0.3,shadowSpread:10}
+      defaults:{blurAmount:0,refraction:0.69,cornerRadius:20,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.3,shadowSpread:10}
     });
     glassEls.forEach(el => el.classList.remove('glass-fallback'));
 

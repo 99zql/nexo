@@ -52,28 +52,30 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 @media (max-width:520px){.grid{grid-template-columns:1fr}}
 
 .card{
-  display:flex;flex-direction:column;gap:12px;
-  padding:16px;text-decoration:none;color:var(--ink);
+  display:flex;flex-direction:column;gap:16px;
+  padding:20px;text-decoration:none;color:var(--ink);
   will-change:transform;
   transition:transform .18s ease;
 }
 .card:hover{transform:translateY(-3px)}
 
-.card .who{display:flex;align-items:center;gap:10px}
-.avatar{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0}
-.card .name{font-size:14px;font-weight:600;margin:0;line-height:1.25}
-.card .role{font-size:11px;color:var(--ink-dim);margin:1px 0 0}
+.card .who{display:flex;align-items:center;gap:12px}
+.avatar{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;flex-shrink:0}
+.card .name{font-size:15px;font-weight:600;margin:0;line-height:1.25}
+.card .role{font-size:11.5px;color:var(--ink-dim);margin:2px 0 0}
 
 /* pills = indicador de pontos, NÃO é botão — por isso sem cursor de
-   clique e sem hover que sugira interação */
-.pills{display:flex;gap:6px}
+   clique e sem hover que sugira interação. Estilo "cápsula" translúcida,
+   ícone colorido + número, igual à referência aprovada */
+.pills{display:flex;gap:8px}
 .pill{
-  flex:1;height:24px;border-radius:6px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;
+  flex:1;padding:8px 10px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:14px;font-weight:700;
 }
-.pill.up{background:var(--up);color:#0d1f16}
-.pill.down{background:var(--down);color:#2a1512}
+.pill .icon{font-size:17px;line-height:1}
+.pill.up{background:rgba(111,174,140,.16);color:var(--up)}
+.pill.down{background:rgba(192,122,107,.16);color:var(--down)}
 
 .glass-fallback{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(6px)}
 
@@ -132,8 +134,8 @@ function card(e){
       <div><p class="name">${e.name}</p><p class="role">${e.role}</p></div>
     </div>
     <div class="pills">
-      <div class="pill up">${e.up}</div>
-      <div class="pill down">${e.down}</div>
+      <div class="pill up"><span class="icon">▲</span>${e.up}</div>
+      <div class="pill down"><span class="icon">▼</span>${e.down}</div>
     </div>`;
   return a;
 }

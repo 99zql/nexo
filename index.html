@@ -17,12 +17,10 @@
 html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-family:'Poppins',sans-serif;-webkit-font-smoothing:antialiased}
 #root{position:relative;min-height:100vh;isolation:isolate}
 
-.bg-scene{position:fixed;inset:0;z-index:0}
+.bg-scene{position:absolute;inset:0;z-index:0}
 .bg-scene img{width:100%;height:100%;object-fit:cover;display:block}
 .bg-scene::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.32)}
 
-/* .page é o container central: cada seção (título, grid, logo) fica
-   empilhada verticalmente, ocupando a largura toda, uma por vez */
 .page{
   position:relative;z-index:1;
   max-width:1100px;margin:0 auto;
@@ -30,7 +28,7 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 }
 
 .heading{
-  margin-bottom:40px; /* respiro entre o título e o grid */
+  margin-bottom:40px;
   text-align:left;
 }
 .heading h1{font-size:30px;font-weight:700;line-height:1.2;margin:0 0 8px}
@@ -46,7 +44,7 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:14px;
-  margin-bottom:56px; /* respiro entre o grid e a logo */
+  margin-bottom:56px;
 }
 @media (max-width:820px){.grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:520px){.grid{grid-template-columns:1fr}}
@@ -55,18 +53,16 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
   display:flex;flex-direction:column;gap:16px;
   padding:20px;text-decoration:none;color:var(--ink);
   will-change:transform;
-  transition:transform .18s ease;
+  transition:transform .22s cubic-bezier(.22,1,.36,1);
 }
-.card:hover{transform:translateY(-3px)}
+.card:hover{transform:translateY(-4px) scale(1.035)}
+.card:active{transform:translateY(-2px) scale(1.01);transition-duration:.1s}
 
 .card .who{display:flex;align-items:center;gap:12px}
 .avatar{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;flex-shrink:0}
 .card .name{font-size:15px;font-weight:600;margin:0;line-height:1.25}
 .card .role{font-size:11.5px;color:var(--ink-dim);margin:2px 0 0}
 
-/* pills = indicador de pontos, NÃO é botão — por isso sem cursor de
-   clique e sem hover que sugira interação. Estilo "cápsula" translúcida,
-   ícone colorido + número, igual à referência aprovada */
 .pills{display:flex;gap:8px}
 .pill{
   flex:1;padding:8px 10px;border-radius:999px;
@@ -108,7 +104,6 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 <script type="module">
 import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
 
-// empresa de contabilidade — cargos e pontos zerados, prontos pra virem do banco depois
 const employees = [
   {id:1,name:'Samuel',role:'Assistente Contábil',up:0,down:0},
   {id:2,name:'Sophia',role:'Analista Fiscal',up:0,down:0},
@@ -153,7 +148,7 @@ function place(el, slot){
   const s = slot.getBoundingClientRect();
   const r = root.getBoundingClientRect();
   el.style.position = 'absolute';
-  el.style.top = (s.top - r.top + window.scrollY) + 'px';
+  el.style.top = (s.top - r.top) + 'px';
   el.style.left = (s.left - r.left) + 'px';
   el.style.width = s.width + 'px';
   el.style.zIndex = '2';
@@ -177,7 +172,14 @@ window.addEventListener('load', async () => {
       defaults:{blurAmount:0.3,refraction:0.5,cornerRadius:12,fresnel:0.7,shadowOpacity:0.3,shadowSpread:10}
     });
     glassEls.forEach(el => el.classList.remove('glass-fallback'));
-    window.addEventListener('resize', () => instance.markChanged());
+
+    window.addEventListener('resize', () => { sync(); instance.markChanged(); });
+
+    glassEls.forEach(el => {
+      el.addEventListener('transitionend', ev => {
+        if (ev.propertyName === 'transform') instance.markChanged(el);
+      });
+    });
   } catch(err){
     console.error('LiquidGlass falhou, usando fallback:', err?.message || err);
   }

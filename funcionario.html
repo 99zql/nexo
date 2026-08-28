@@ -9,9 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#f2f4f5; --ink-dim:#c7cdd0;
+  --ink:#f2f4f5; --ink-dim:#c7cdd0; --ink-faint:#8b9296;
   --up:#6fae8c; --down:#c07a6b;
   --line:rgba(255,255,255,.14);
+  --surface:rgba(255,255,255,.08);
 }
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-family:'Poppins',sans-serif;-webkit-font-smoothing:antialiased}
@@ -21,80 +22,98 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 .bg-scene img{width:100%;height:100%;object-fit:cover;display:block}
 .bg-scene::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.32)}
 
-.page{
-  position:relative;z-index:1;
-  max-width:900px;margin:0 auto;
-  padding:48px 32px 60px;
-}
+.page{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:48px 32px 60px}
 
-.back-slot{margin-bottom:28px}
-.profile-slot{margin-bottom:32px}
+.slot-back{margin-bottom:28px}
+.slot-profile{margin-bottom:32px}
+.slot-composer{margin-bottom:32px}
 
 .back-btn{
   display:inline-flex;align-items:center;justify-content:center;
-  padding:10px 20px;
-  font-size:13px;font-weight:600;color:var(--ink);
+  padding:10px 20px;font-size:13px;font-weight:600;color:var(--ink);
   text-decoration:none;cursor:pointer;
-  will-change:transform;
   transition:transform .18s cubic-bezier(.22,1,.36,1);
 }
 .back-btn:hover{transform:scale(1.04)}
-.back-btn:active{transform:scale(0.98)}
+.back-btn:active{transform:scale(.98)}
 
-.profile-card{
-  display:flex;align-items:center;gap:20px;
-  padding:28px;
-}
-.avatar-lg{width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;flex-shrink:0}
+.profile-card{display:flex;align-items:center;gap:20px;padding:28px}
+.avatar{border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.avatar-lg{width:68px;height:68px;font-size:26px}
+.avatar-sm{width:32px;height:32px;font-size:14px;font-weight:600;background:rgba(255,255,255,.16)}
+
 .profile-info h1{font-size:22px;font-weight:700;margin:0 0 4px}
 .profile-info p{font-size:13.5px;color:var(--ink-dim);margin:0}
 .profile-stats{display:flex;gap:10px;margin-left:auto}
-.stat-pill{
-  padding:8px 14px;border-radius:999px;
-  display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;
-}
-.stat-pill .icon{font-size:16px;line-height:1}
-.stat-pill.up{background:rgba(111,174,140,.16);color:var(--up)}
-.stat-pill.down{background:rgba(192,122,107,.16);color:var(--down)}
 
-.divider{
-  border:none;
-  border-top:1px solid var(--line);
-  margin:0 0 32px;
-}
+.pill{padding:8px 14px;border-radius:999px;display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700}
+.pill .icon{font-size:16px;line-height:1}
+.pill.up{background:rgba(111,174,140,.16);color:var(--up)}
+.pill.down{background:rgba(192,122,107,.16);color:var(--down)}
+
+.divider{border:none;border-top:1px solid var(--line);margin:0 0 32px}
 
 .section-title{font-size:15px;font-weight:600;color:var(--ink-dim);margin:0 0 16px;text-transform:uppercase;letter-spacing:.04em}
+
+.composer{display:flex;flex-direction:column;gap:16px;padding:24px}
+.composer-tabs{display:flex;gap:8px}
+.composer-tab{
+  flex:1;padding:10px;border:none;border-radius:12px;
+  background:rgba(255,255,255,.06);color:var(--ink-dim);
+  font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:background .18s ease,color .18s ease;
+}
+.composer-tab .icon{font-size:15px;line-height:1}
+.composer-tab[data-active="true"].up{background:rgba(111,174,140,.22);color:var(--up)}
+.composer-tab[data-active="true"].down{background:rgba(192,122,107,.22);color:var(--down)}
+
+.composer-field{
+  width:100%;min-height:96px;resize:vertical;
+  padding:14px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(0,0,0,.18);color:var(--ink);
+  font-family:inherit;font-size:14px;line-height:1.5;
+}
+.composer-field:focus{outline:none;border-color:rgba(255,255,255,.32)}
+.composer-field::placeholder{color:var(--ink-faint)}
+
+.composer-footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.composer-hint{font-size:12px;color:var(--ink-faint)}
+.composer-hint[data-warn="true"]{color:var(--down)}
+
+.composer-submit{
+  padding:10px 22px;border:none;border-radius:999px;cursor:pointer;
+  background:var(--ink);color:#0a0d0c;font-family:inherit;font-size:13.5px;font-weight:700;
+  transition:transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease;
+}
+.composer-submit:hover:not(:disabled){transform:scale(1.03)}
+.composer-submit:active:not(:disabled){transform:scale(.97)}
+.composer-submit:disabled{opacity:.4;cursor:not-allowed}
 
 .feed{display:flex;flex-direction:column;gap:12px;margin-bottom:40px}
 
 .feedback-card{
-  display:flex;flex-direction:column;gap:12px;
-  padding:18px 20px;
-  will-change:transform;
-  transition:transform .2s cubic-bezier(.22,1,.36,1);
+  display:flex;flex-direction:column;gap:12px;padding:18px 20px;
+  transition:transform .2s cubic-bezier(.22,1,.36,1),opacity .3s ease;
 }
 .feedback-card:hover{transform:translateY(-2px) scale(1.012)}
+.feedback-card[data-pending="true"]{opacity:.6}
 
 .fb-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .fb-who{display:flex;align-items:center;gap:10px}
-.fb-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .fb-name{font-size:13.5px;font-weight:600;margin:0}
 .fb-time{font-size:11.5px;color:var(--ink-dim);margin:1px 0 0}
 
-.fb-tag{
-  padding:5px 10px;border-radius:999px;
-  display:flex;align-items:center;gap:5px;
-  font-size:12px;font-weight:700;flex-shrink:0;
-}
+.fb-tag{padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;flex-shrink:0}
 .fb-tag .icon{font-size:13px;line-height:1}
 .fb-tag.up{background:rgba(111,174,140,.16);color:var(--up)}
 .fb-tag.down{background:rgba(192,122,107,.16);color:var(--down)}
 
-.fb-msg{font-size:14px;line-height:1.55;color:var(--ink);margin:0}
+.fb-msg{font-size:14px;line-height:1.55;color:var(--ink);margin:0;white-space:pre-wrap}
 
 .empty-state{padding:32px 20px;text-align:center;color:var(--ink-dim);font-size:13.5px}
 
-.glass-fallback{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:20px;backdrop-filter:blur(6px)}
+.glass-fallback{background:var(--surface);border:1px solid var(--line);border-radius:20px;backdrop-filter:blur(6px)}
 </style>
 </head>
 <body>
@@ -103,33 +122,66 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
   <div class="bg-scene"><img src="assets/bg.jpg" alt="" crossorigin="anonymous"></div>
 
   <div class="page">
-
-    <div class="back-slot" id="backSlot"></div>
-
-    <div class="profile-slot" id="profileSlot"></div>
+    <div class="slot-back" id="slotBack"></div>
+    <div class="slot-profile" id="slotProfile"></div>
 
     <hr class="divider">
 
+    <p class="section-title">Deixar um feedback</p>
+    <div class="slot-composer" id="slotComposer"></div>
+
     <p class="section-title">Feedbacks recebidos</p>
     <div class="feed" id="feed"></div>
-
   </div>
 </div>
 
-<template id="profileTpl">
-  <div class="avatar-lg" id="pAvatar"></div>
+<template id="tpl-profile">
+  <div class="avatar avatar-lg" data-role="avatar"></div>
   <div class="profile-info">
-    <h1 id="pName"></h1>
-    <p id="pRole"></p>
+    <h1 data-role="name"></h1>
+    <p data-role="role"></p>
   </div>
   <div class="profile-stats">
-    <div class="stat-pill up"><span class="icon">▲</span><span id="pUp">0</span></div>
-    <div class="stat-pill down"><span class="icon">▼</span><span id="pDown">0</span></div>
+    <div class="pill up"><span class="icon">▲</span><span data-role="up">0</span></div>
+    <div class="pill down"><span class="icon">▼</span><span data-role="down">0</span></div>
   </div>
+</template>
+
+<template id="tpl-composer">
+  <div class="composer-tabs">
+    <button type="button" class="composer-tab up" data-type="up" data-active="true"><span class="icon">▲</span>Positivo</button>
+    <button type="button" class="composer-tab down" data-type="down"><span class="icon">▼</span>Negativo</button>
+  </div>
+  <textarea class="composer-field" data-role="message" maxlength="400" placeholder="Escreva seu feedback de forma anônima..."></textarea>
+  <div class="composer-footer">
+    <span class="composer-hint" data-role="hint">0 / 400</span>
+    <button type="button" class="composer-submit" data-role="submit" disabled>Enviar feedback</button>
+  </div>
+</template>
+
+<template id="tpl-feedback">
+  <div class="fb-top">
+    <div class="fb-who">
+      <div class="avatar avatar-sm">?</div>
+      <div>
+        <p class="fb-name">Anônimo</p>
+        <p class="fb-time" data-role="time"></p>
+      </div>
+    </div>
+    <div class="fb-tag" data-role="tag"><span class="icon" data-role="tag-icon"></span><span data-role="tag-label"></span></div>
+  </div>
+  <p class="fb-msg" data-role="message"></p>
 </template>
 
 <script type="module">
 import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
+
+const GLASS_PRESET = {blurAmount:0,refraction:0.69,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.3,shadowSpread:10};
+const PROFILE_PRESET = {...GLASS_PRESET,blurAmount:0.12,brightness:-0.08,shadowOpacity:0.45,shadowSpread:14,cornerRadius:24};
+const CARD_PRESET = {...GLASS_PRESET,cornerRadius:16,shadowOpacity:0.25};
+const BUTTON_PRESET = {...GLASS_PRESET,cornerRadius:999,shadowOpacity:0.25,button:true};
+
+const MAX_MESSAGE_LENGTH = 400;
 
 const employees = [
   {id:1,name:'Samuel',role:'Assistente Contábil'},
@@ -143,142 +195,294 @@ const employees = [
   {id:9,name:'Gabriel',role:'Auxiliar Contábil'},
 ];
 
-const feedbacks = [
+const seedFeedbacks = [
   {employeeId:1,type:'up',message:'Sempre entrega os relatórios no prazo e ajuda quem tá com dúvida.',timestamp:'2026-08-20T14:32:00'},
   {employeeId:1,type:'down',message:'Poderia responder mensagens mais rápido durante o fechamento.',timestamp:'2026-08-15T09:10:00'},
   {employeeId:1,type:'up',message:'Muito atencioso ao explicar as guias de impostos.',timestamp:'2026-08-11T17:45:00'},
 ];
 
-const params = new URLSearchParams(location.search);
-const id = Number(params.get('id'));
-const employee = employees.find(e => e.id === id) ?? employees[0];
-const empFeedbacks = feedbacks
-  .filter(f => f.employeeId === employee.id)
-  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-function formatTimestamp(iso){
-  const d = new Date(iso);
-  return d.toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+async function createFeedback(employeeId, payload){
+  return {
+    id: crypto.randomUUID(),
+    employeeId,
+    type: payload.type,
+    message: payload.message,
+    timestamp: new Date().toISOString(),
+  };
 }
 
-function feedbackCard(f){
-  const el = document.createElement('div');
-  el.className = 'feedback-card glass-fallback';
-  el.dataset.config = JSON.stringify({blurAmount:0,refraction:0.69,cornerRadius:16,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.25});
-  const tagIcon = f.type === 'up' ? '▲' : '▼';
-  const tagLabel = f.type === 'up' ? 'Positivo' : 'Negativo';
-  el.innerHTML = `
-    <div class="fb-top">
-      <div class="fb-who">
-        <div class="fb-avatar">?</div>
-        <div><p class="fb-name">Anônimo</p><p class="fb-time">${formatTimestamp(f.timestamp)}</p></div>
-      </div>
-      <div class="fb-tag ${f.type}"><span class="icon">${tagIcon}</span>${tagLabel}</div>
-    </div>
-    <p class="fb-msg"></p>`;
-  el.querySelector('.fb-msg').textContent = f.message;
+function formatTimestamp(iso){
+  return new Date(iso).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function resolveEmployee(){
+  const id = Number(new URLSearchParams(location.search).get('id'));
+  return employees.find(e => e.id === id) ?? employees[0];
+}
+
+function sortByRecent(list){
+  return [...list].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+}
+
+class GlassLayer {
+  constructor(root){
+    this.root = root;
+    this.entries = [];
+  }
+
+  mount(el, slot, options = {}){
+    el.classList.add('glass-fallback');
+    this.root.appendChild(el);
+    this.entries.push({el, slot, autoWidth: !!options.autoWidth});
+    return el;
+  }
+
+  unmount(el){
+    this.entries = this.entries.filter(entry => entry.el !== el);
+    el.remove();
+  }
+
+  place(entry){
+    const slotRect = entry.slot.getBoundingClientRect();
+    const rootRect = this.root.getBoundingClientRect();
+    entry.el.style.position = 'absolute';
+    entry.el.style.top = `${slotRect.top - rootRect.top}px`;
+    entry.el.style.left = `${slotRect.left - rootRect.left}px`;
+    entry.el.style.zIndex = '2';
+    if (!entry.autoWidth) entry.el.style.width = `${slotRect.width}px`;
+  }
+
+  sync(){
+    for (const entry of this.entries){
+      if (entry.autoWidth){
+        entry.el.style.position = 'static';
+        entry.el.style.width = 'auto';
+        const w = entry.el.offsetWidth;
+        const h = entry.el.offsetHeight;
+        entry.slot.style.width = `${w}px`;
+        entry.slot.style.height = `${h}px`;
+        this.place(entry);
+        entry.el.style.width = `${w}px`;
+      } else {
+        entry.slot.style.height = `${entry.el.offsetHeight}px`;
+        this.place(entry);
+      }
+    }
+  }
+
+  elements(){
+    return this.entries.map(entry => entry.el);
+  }
+}
+
+function buildBackButton(){
+  const el = document.createElement('a');
+  el.href = 'index.html';
+  el.className = 'back-btn';
+  el.textContent = 'Voltar';
+  el.dataset.config = JSON.stringify(BUTTON_PRESET);
   return el;
 }
 
-const root = document.getElementById('root');
-const feedEl = document.getElementById('feed');
-const backSlot = document.getElementById('backSlot');
-const profileSlot = document.getElementById('profileSlot');
-
-const backEl = document.createElement('a');
-backEl.href = 'index.html';
-backEl.className = 'back-btn glass-fallback';
-backEl.textContent = 'Voltar';
-backEl.dataset.config = JSON.stringify({blurAmount:0,refraction:0.69,cornerRadius:999,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.25,button:true});
-root.appendChild(backEl);
-
-const profileTpl = document.getElementById('profileTpl');
-const profileCard = document.createElement('div');
-profileCard.className = 'profile-card glass-fallback';
-profileCard.dataset.config = JSON.stringify({blurAmount:0.12,refraction:0.69,cornerRadius:24,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,brightness:-0.08,shadowOpacity:0.45,shadowSpread:14});
-profileCard.appendChild(profileTpl.content.cloneNode(true));
-root.appendChild(profileCard);
-
-document.getElementById('pAvatar').textContent = employee.name[0];
-document.getElementById('pName').textContent = employee.name;
-document.getElementById('pRole').textContent = employee.role;
-document.getElementById('pUp').textContent = empFeedbacks.filter(f => f.type === 'up').length;
-document.getElementById('pDown').textContent = empFeedbacks.filter(f => f.type === 'down').length;
-
-let cardEls = [];
-if (empFeedbacks.length === 0){
-  const empty = document.createElement('div');
-  empty.className = 'empty-state glass-fallback';
-  empty.dataset.config = JSON.stringify({blurAmount:0,refraction:0.69,cornerRadius:16,fresnel:1,shadowOpacity:0.2});
-  empty.textContent = 'Nenhum feedback recebido ainda.';
-  root.appendChild(empty);
-  cardEls = [empty];
-
-  const slot = document.createElement('div');
-  feedEl.appendChild(slot);
-  var feedSlots = [slot];
-} else {
-  const slots = empFeedbacks.map(() => document.createElement('div'));
-  feedEl.append(...slots);
-  cardEls = empFeedbacks.map(feedbackCard);
-  cardEls.forEach(el => root.appendChild(el));
-  var feedSlots = slots;
+function buildProfileCard(employee, stats){
+  const el = document.createElement('div');
+  el.className = 'profile-card';
+  el.dataset.config = JSON.stringify(PROFILE_PRESET);
+  el.appendChild(document.getElementById('tpl-profile').content.cloneNode(true));
+  el.querySelector('[data-role="avatar"]').textContent = employee.name[0];
+  el.querySelector('[data-role="name"]').textContent = employee.name;
+  el.querySelector('[data-role="role"]').textContent = employee.role;
+  el.querySelector('[data-role="up"]').textContent = stats.up;
+  el.querySelector('[data-role="down"]').textContent = stats.down;
+  return el;
 }
 
-function place(el, slot, autoWidth){
-  const s = slot.getBoundingClientRect();
-  const r = root.getBoundingClientRect();
-  el.style.position = 'absolute';
-  el.style.top = (s.top - r.top) + 'px';
-  el.style.left = (s.left - r.left) + 'px';
-  if (!autoWidth) el.style.width = s.width + 'px';
-  el.style.zIndex = '2';
+function buildFeedbackCard(feedback){
+  const el = document.createElement('div');
+  el.className = 'feedback-card';
+  el.dataset.config = JSON.stringify(CARD_PRESET);
+  el.appendChild(document.getElementById('tpl-feedback').content.cloneNode(true));
+
+  const isUp = feedback.type === 'up';
+  const tag = el.querySelector('[data-role="tag"]');
+  tag.classList.add(isUp ? 'up' : 'down');
+  el.querySelector('[data-role="tag-icon"]').textContent = isUp ? '▲' : '▼';
+  el.querySelector('[data-role="tag-label"]').textContent = isUp ? 'Positivo' : 'Negativo';
+  el.querySelector('[data-role="time"]').textContent = formatTimestamp(feedback.timestamp);
+  el.querySelector('[data-role="message"]').textContent = feedback.message;
+
+  if (feedback.pending) el.dataset.pending = 'true';
+  return el;
 }
 
-function sync(){
-  backEl.style.position = 'static';
-  backEl.style.width = 'auto';
-  const naturalW = backEl.offsetWidth;
-  const naturalH = backEl.offsetHeight;
-  backSlot.style.width = naturalW + 'px';
-  backSlot.style.height = naturalH + 'px';
-  place(backEl, backSlot, true);
-  backEl.style.width = naturalW + 'px';
-
-  place(profileCard, profileSlot);
-  profileSlot.style.height = profileCard.offsetHeight + 'px';
-
-  feedSlots.forEach((slot, i) => { slot.style.height = cardEls[i].offsetHeight + 'px'; });
-  feedSlots.forEach((slot, i) => place(cardEls[i], slot));
+function buildEmptyState(){
+  const el = document.createElement('div');
+  el.className = 'empty-state';
+  el.dataset.config = JSON.stringify({...GLASS_PRESET,cornerRadius:16,shadowOpacity:0.2});
+  el.textContent = 'Nenhum feedback recebido ainda.';
+  return el;
 }
 
-window.addEventListener('load', sync);
-window.addEventListener('resize', sync);
+class FeedbackComposer {
+  constructor(root, glass, slot, onSubmit){
+    this.onSubmit = onSubmit;
+    this.type = 'up';
 
-const glassEls = [backEl, profileCard, ...cardEls];
+    this.el = document.createElement('div');
+    this.el.className = 'composer';
+    this.el.dataset.config = JSON.stringify(CARD_PRESET);
+    this.el.appendChild(document.getElementById('tpl-composer').content.cloneNode(true));
 
-window.addEventListener('load', async () => {
-  try { await document.fonts.ready; } catch(e){}
+    this.tabs = [...this.el.querySelectorAll('.composer-tab')];
+    this.field = this.el.querySelector('[data-role="message"]');
+    this.hint = this.el.querySelector('[data-role="hint"]');
+    this.submitBtn = this.el.querySelector('[data-role="submit"]');
 
-  try {
-    const instance = await LiquidGlass.init({
-      root,
-      glassElements: glassEls,
-      defaults:{blurAmount:0,refraction:0.69,cornerRadius:20,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.3,shadowSpread:10}
-    });
-    glassEls.forEach(el => el.classList.remove('glass-fallback'));
+    this.tabs.forEach(tab => tab.addEventListener('click', () => this.setType(tab.dataset.type)));
+    this.field.addEventListener('input', () => this.refresh());
+    this.submitBtn.addEventListener('click', () => this.submit());
 
-    window.addEventListener('resize', () => instance.markChanged());
-
-    [profileCard, ...cardEls].forEach(el => {
-      el.addEventListener('transitionend', ev => {
-        if (ev.propertyName === 'transform') instance.markChanged(el);
-      });
-    });
-  } catch(err){
-    console.error('LiquidGlass falhou, usando fallback:', err?.message || err);
+    glass.mount(this.el, slot);
+    this.refresh();
   }
-});
+
+  setType(type){
+    this.type = type;
+    this.tabs.forEach(tab => tab.dataset.active = String(tab.dataset.type === type));
+  }
+
+  refresh(){
+    const length = this.field.value.length;
+    this.hint.textContent = `${length} / ${MAX_MESSAGE_LENGTH}`;
+    this.hint.dataset.warn = String(length >= MAX_MESSAGE_LENGTH);
+    this.submitBtn.disabled = length === 0;
+  }
+
+  async submit(){
+    const message = this.field.value.trim();
+    if (!message) return;
+
+    this.submitBtn.disabled = true;
+    this.submitBtn.textContent = 'Enviando...';
+
+    try {
+      await this.onSubmit({type: this.type, message});
+      this.field.value = '';
+      this.setType('up');
+      this.refresh();
+    } finally {
+      this.submitBtn.textContent = 'Enviar feedback';
+      this.refresh();
+    }
+  }
+}
+
+class FeedbackFeed {
+  constructor(root, glass, container){
+    this.root = root;
+    this.glass = glass;
+    this.container = container;
+    this.cards = new Map();
+  }
+
+  render(feedbacks){
+    for (const el of this.cards.values()) this.glass.unmount(el);
+    this.cards.clear();
+    this.container.innerHTML = '';
+
+    if (feedbacks.length === 0){
+      const empty = buildEmptyState();
+      const slot = document.createElement('div');
+      this.container.appendChild(slot);
+      this.glass.mount(empty, slot);
+      this.cards.set('empty', empty);
+      return;
+    }
+
+    for (const feedback of feedbacks){
+      const card = buildFeedbackCard(feedback);
+      const slot = document.createElement('div');
+      this.container.appendChild(slot);
+      this.glass.mount(card, slot);
+      this.cards.set(feedback.id ?? feedback.timestamp, card);
+    }
+  }
+}
+
+async function main(){
+  const root = document.getElementById('root');
+  const employee = resolveEmployee();
+  let feedbacks = sortByRecent(seedFeedbacks.filter(f => f.employeeId === employee.id));
+
+  const glass = new GlassLayer(root);
+  let glassInstance = null;
+  let fontsReady = false;
+
+  function countByType(list){
+    return {
+      up: list.filter(f => f.type === 'up').length,
+      down: list.filter(f => f.type === 'down').length,
+    };
+  }
+
+  async function reinitGlass(){
+    glass.sync();
+
+    if (!fontsReady){
+      try { await document.fonts.ready; } catch (err) {}
+      fontsReady = true;
+    }
+
+    glassInstance?.destroy();
+    glassInstance = null;
+
+    try {
+      glassInstance = await LiquidGlass.init({
+        root,
+        glassElements: glass.elements(),
+        defaults: GLASS_PRESET,
+      });
+      glass.elements().forEach(el => el.classList.remove('glass-fallback'));
+    } catch (err) {
+      console.error('LiquidGlass falhou, usando fallback:', err?.message || err);
+    }
+  }
+
+  glass.mount(buildBackButton(), document.getElementById('slotBack'), {autoWidth: true});
+
+  const profileSlot = document.getElementById('slotProfile');
+  let profileCard = glass.mount(
+    buildProfileCard(employee, countByType(feedbacks)),
+    profileSlot
+  );
+
+  const feed = new FeedbackFeed(root, glass, document.getElementById('feed'));
+  feed.render(feedbacks);
+
+  new FeedbackComposer(root, glass, document.getElementById('slotComposer'), async ({type, message}) => {
+    const created = await createFeedback(employee.id, {type, message});
+    feedbacks = sortByRecent([created, ...feedbacks]);
+
+    glass.unmount(profileCard);
+    profileCard = glass.mount(buildProfileCard(employee, countByType(feedbacks)), profileSlot);
+
+    feed.render(feedbacks);
+    await reinitGlass();
+  });
+
+  root.addEventListener('transitionend', ev => {
+    if (ev.propertyName === 'transform') glassInstance?.markChanged(ev.target);
+  });
+
+  window.addEventListener('resize', () => {
+    glass.sync();
+    glassInstance?.markChanged();
+  });
+
+  window.addEventListener('load', reinitGlass);
+}
+
+main();
 </script>
 </body>
 </html>

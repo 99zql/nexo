@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXO — Perfil do Funcionário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#f2f4f5; --ink-dim:#c7cdd0;
+  --up:#6fae8c; --down:#c07a6b;
+  --line:rgba(255,255,255,.14);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-family:'Poppins',sans-serif;-webkit-font-smoothing:antialiased}
+#root{position:relative;min-height:100vh;isolation:isolate}
+
+.bg-scene{position:absolute;inset:0;z-index:0}
+.bg-scene img{width:100%;height:100%;object-fit:cover;display:block}
+.bg-scene::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.32)}
+
+.page{
+  position:relative;z-index:1;
+  max-width:900px;margin:0 auto;
+  padding:48px 32px 60px;
+}
+
+.back{
+  display:inline-flex;align-items:center;gap:6px;
+  color:var(--ink-dim);text-decoration:none;font-size:13px;font-weight:500;
+  margin-bottom:28px;transition:color .18s ease;
+}
+.back:hover{color:var(--ink)}
+
+.profile-card{
+  display:flex;align-items:center;gap:20px;
+  padding:28px;margin-bottom:32px;
+}
+.avatar-lg{width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;flex-shrink:0}
+.profile-info h1{font-size:22px;font-weight:700;margin:0 0 4px}
+.profile-info p{font-size:13.5px;color:var(--ink-dim);margin:0}
+.profile-stats{display:flex;gap:10px;margin-left:auto}
+.stat-pill{
+  padding:8px 14px;border-radius:999px;
+  display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;
+}
+.stat-pill .icon{font-size:16px;line-height:1}
+.stat-pill.up{background:rgba(111,174,140,.16);color:var(--up)}
+.stat-pill.down{background:rgba(192,122,107,.16);color:var(--down)}
+
+.section-title{font-size:15px;font-weight:600;color:var(--ink-dim);margin:0 0 16px;text-transform:uppercase;letter-spacing:.04em}
+
+.feed{display:flex;flex-direction:column;gap:12px;margin-bottom:40px}
+
+.feedback-card{
+  display:flex;flex-direction:column;gap:12px;
+  padding:18px 20px;
+  will-change:transform;
+  transition:transform .2s cubic-bezier(.22,1,.36,1);
+}
+.feedback-card:hover{transform:translateY(-2px) scale(1.012)}
+
+.fb-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.fb-who{display:flex;align-items:center;gap:10px}
+.fb-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.fb-name{font-size:13.5px;font-weight:600;margin:0}
+.fb-time{font-size:11.5px;color:var(--ink-dim);margin:1px 0 0}
+
+.fb-tag{
+  padding:5px 10px;border-radius:999px;
+  display:flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:700;flex-shrink:0;
+}
+.fb-tag .icon{font-size:13px;line-height:1}
+.fb-tag.up{background:rgba(111,174,140,.16);color:var(--up)}
+.fb-tag.down{background:rgba(192,122,107,.16);color:var(--down)}
+
+.fb-msg{font-size:14px;line-height:1.55;color:var(--ink);margin:0}
+
+.empty-state{padding:32px 20px;text-align:center;color:var(--ink-dim);font-size:13.5px}
+
+.glass-fallback{background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:20px;backdrop-filter:blur(6px)}
+</style>
+</head>
+<body>
+
+<div id="root">
+  <div class="bg-scene"><img src="assets/bg.jpg" alt="" crossorigin="anonymous"></div>
+
+  <div class="page">
+
+    <a class="back" href="index.html">← Voltar</a>
+
+    <div class="profile-card glass-fallback" id="profileCard" data-config='{"blurAmount":0,"refraction":0.69,"cornerRadius":24,"chromAberration":0.05,"edgeHighlight":0.05,"fresnel":1,"shadowOpacity":0.3}'>
+      <div class="avatar-lg" id="pAvatar"></div>
+      <div class="profile-info">
+        <h1 id="pName"></h1>
+        <p id="pRole"></p>
+      </div>
+      <div class="profile-stats">
+        <div class="stat-pill up"><span class="icon">▲</span><span id="pUp">0</span></div>
+        <div class="stat-pill down"><span class="icon">▼</span><span id="pDown">0</span></div>
+      </div>
+    </div>
+
+    <p class="section-title">Feedbacks recebidos</p>
+    <div class="feed" id="feed"></div>
+
+  </div>
+</div>
+
+<script type="module">
+import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
+
+const employees = [
+  {id:1,name:'Samuel',role:'Assistente Contábil'},
+  {id:2,name:'Sophia',role:'Analista Fiscal'},
+  {id:3,name:'Lucas',role:'Contador Responsável'},
+  {id:4,name:'Murillo',role:'Auxiliar Administrativo'},
+  {id:5,name:'Luis',role:'Analista de Folha de Pagamento'},
+  {id:6,name:'Giovanna',role:'Assistente Fiscal'},
+  {id:7,name:'Felipe',role:'Analista Contábil'},
+  {id:8,name:'Maria Luiza',role:'Recepcionista'},
+  {id:9,name:'Gabriel',role:'Auxiliar Contábil'},
+];
+
+const feedbacks = [
+  {employeeId:1,type:'up',message:'Sempre entrega os relatórios no prazo e ajuda quem tá com dúvida.',timestamp:'2026-08-20T14:32:00'},
+  {employeeId:1,type:'down',message:'Poderia responder mensagens mais rápido durante o fechamento.',timestamp:'2026-08-15T09:10:00'},
+  {employeeId:1,type:'up',message:'Muito atencioso ao explicar as guias de impostos.',timestamp:'2026-08-11T17:45:00'},
+];
+
+const params = new URLSearchParams(location.search);
+const id = Number(params.get('id'));
+const employee = employees.find(e => e.id === id) ?? employees[0];
+const empFeedbacks = feedbacks
+  .filter(f => f.employeeId === employee.id)
+  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+document.getElementById('pAvatar').textContent = employee.name[0];
+document.getElementById('pName').textContent = employee.name;
+document.getElementById('pRole').textContent = employee.role;
+document.getElementById('pUp').textContent = empFeedbacks.filter(f => f.type === 'up').length;
+document.getElementById('pDown').textContent = empFeedbacks.filter(f => f.type === 'down').length;
+
+function formatTimestamp(iso){
+  const d = new Date(iso);
+  return d.toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function feedbackCard(f){
+  const el = document.createElement('div');
+  el.className = 'feedback-card glass-fallback';
+  el.dataset.config = JSON.stringify({blurAmount:0,refraction:0.69,cornerRadius:16,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.25});
+  const tagIcon = f.type === 'up' ? '▲' : '▼';
+  const tagLabel = f.type === 'up' ? 'Positivo' : 'Negativo';
+  el.innerHTML = `
+    <div class="fb-top">
+      <div class="fb-who">
+        <div class="fb-avatar">?</div>
+        <div><p class="fb-name">Anônimo</p><p class="fb-time">${formatTimestamp(f.timestamp)}</p></div>
+      </div>
+      <div class="fb-tag ${f.type}"><span class="icon">${tagIcon}</span>${tagLabel}</div>
+    </div>
+    <p class="fb-msg"></p>`;
+  el.querySelector('.fb-msg').textContent = f.message;
+  return el;
+}
+
+const root = document.getElementById('root');
+const feedEl = document.getElementById('feed');
+
+let cardEls = [];
+if (empFeedbacks.length === 0){
+  const empty = document.createElement('div');
+  empty.className = 'empty-state glass-fallback';
+  empty.dataset.config = JSON.stringify({blurAmount:0,refraction:0.69,cornerRadius:16,fresnel:1,shadowOpacity:0.2});
+  empty.textContent = 'Nenhum feedback recebido ainda.';
+  root.appendChild(empty);
+  cardEls = [empty];
+
+  const slot = document.createElement('div');
+  feedEl.appendChild(slot);
+  function placeEmpty(){
+    const s = slot.getBoundingClientRect();
+    const r = root.getBoundingClientRect();
+    empty.style.position = 'absolute';
+    empty.style.top = (s.top - r.top) + 'px';
+    empty.style.left = (s.left - r.left) + 'px';
+    empty.style.width = s.width + 'px';
+    empty.style.zIndex = '2';
+    slot.style.height = empty.offsetHeight + 'px';
+  }
+  window.addEventListener('load', placeEmpty);
+  window.addEventListener('resize', placeEmpty);
+} else {
+  const slots = empFeedbacks.map(() => document.createElement('div'));
+  feedEl.append(...slots);
+  cardEls = empFeedbacks.map(feedbackCard);
+  cardEls.forEach(el => root.appendChild(el));
+
+  function place(el, slot){
+    const s = slot.getBoundingClientRect();
+    const r = root.getBoundingClientRect();
+    el.style.position = 'absolute';
+    el.style.top = (s.top - r.top) + 'px';
+    el.style.left = (s.left - r.left) + 'px';
+    el.style.width = s.width + 'px';
+    el.style.zIndex = '2';
+  }
+
+  function sync(){
+    cardEls.forEach((el, i) => { slots[i].style.height = el.offsetHeight + 'px'; });
+    cardEls.forEach((el, i) => place(el, slots[i]));
+  }
+
+  window.addEventListener('load', sync);
+  window.addEventListener('resize', sync);
+}
+
+const profileCard = document.getElementById('profileCard');
+const glassEls = [profileCard, ...cardEls];
+
+window.addEventListener('load', async () => {
+  try { await document.fonts.ready; } catch(e){}
+
+  try {
+    const instance = await LiquidGlass.init({
+      root,
+      glassElements: glassEls,
+      defaults:{blurAmount:0,refraction:0.69,cornerRadius:20,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.3,shadowSpread:10}
+    });
+    glassEls.forEach(el => el.classList.remove('glass-fallback'));
+
+    window.addEventListener('resize', () => instance.markChanged());
+
+    cardEls.forEach(el => {
+      el.addEventListener('transitionend', ev => {
+        if (ev.propertyName === 'transform') instance.markChanged(el);
+      });
+    });
+  } catch(err){
+    console.error('LiquidGlass falhou, usando fallback:', err?.message || err);
+  }
+});
+</script>
+</body>
+</html>

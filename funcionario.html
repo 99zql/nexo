@@ -242,6 +242,19 @@ class GlassLayer {
     el.remove();
   }
 
+  measureNatural(el){
+    const clone = el.cloneNode(true);
+    clone.style.position = 'fixed';
+    clone.style.visibility = 'hidden';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+    clone.style.width = 'auto';
+    document.body.appendChild(clone);
+    const size = {width: clone.offsetWidth, height: clone.offsetHeight};
+    clone.remove();
+    return size;
+  }
+
   place(entry){
     const slotRect = entry.slot.getBoundingClientRect();
     const rootRect = this.root.getBoundingClientRect();
@@ -253,21 +266,19 @@ class GlassLayer {
   }
 
   sync(){
+    const pageWidth = document.querySelector('.page').clientWidth;
+
     for (const entry of this.entries){
       if (entry.autoWidth){
-        entry.el.style.position = 'static';
-        entry.el.style.width = 'auto';
-        const w = entry.el.offsetWidth;
-        const h = entry.el.offsetHeight;
-        entry.slot.style.width = `${w}px`;
-        entry.slot.style.height = `${h}px`;
-        this.place(entry);
-        entry.el.style.width = `${w}px`;
+        const {width, height} = this.measureNatural(entry.el);
+        entry.slot.style.width = `${width}px`;
+        entry.slot.style.height = `${height}px`;
       } else {
+        entry.el.style.width = `${pageWidth}px`;
         entry.slot.style.height = `${entry.el.offsetHeight}px`;
-        this.place(entry);
       }
     }
+    for (const entry of this.entries) this.place(entry);
   }
 
   elements(){

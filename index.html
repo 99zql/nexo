@@ -78,6 +78,9 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 .logo-wrap{width:100%;display:flex;justify-content:center}
 .logo-wrap img{height:150px;width:auto;opacity:.95}
 @media (max-width:600px){.logo-wrap img{height:80px}}
+
+.state-msg{padding:20px;text-align:center;color:var(--ink-dim);font-size:13.5px;grid-column:1/-1}
+.state-msg[data-error="true"]{color:var(--down)}
 </style>
 </head>
 <body>
@@ -89,7 +92,7 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 
     <div class="heading">
       <h1>Desempenho dos Funcionários</h1>
-      <div class="sub" id="activeCount">0 ativos</div>
+      <div class="sub" id="activeCount">carregando...</div>
     </div>
 
     <hr class="divider">
@@ -104,17 +107,8 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 <script type="module">
 import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
 
-const employees = [
-  {id:1,name:'Samuel',role:'Assistente Contábil',up:0,down:0},
-  {id:2,name:'Sophia',role:'Analista Fiscal',up:0,down:0},
-  {id:3,name:'Lucas',role:'Contador Responsável',up:0,down:0},
-  {id:4,name:'Murillo',role:'Auxiliar Administrativo',up:0,down:0},
-  {id:5,name:'Luis',role:'Analista de Folha de Pagamento',up:0,down:0},
-  {id:6,name:'Giovanna',role:'Assistente Fiscal',up:0,down:0},
-  {id:7,name:'Felipe',role:'Analista Contábil',up:0,down:0},
-  {id:8,name:'Maria Luiza',role:'Recepcionista',up:0,down:0},
-  {id:9,name:'Gabriel',role:'Auxiliar Contábil',up:0,down:0},
-];
+// endereço da API (mesmo backend usado no funcionario.html)
+const API_BASE = 'https://nexo-y481.onrender.com';
 
 const cfg = JSON.stringify({blurAmount:0,refraction:0.69,cornerRadius:20,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.3});
 
@@ -135,31 +129,69 @@ function card(e){
   return a;
 }
 
-document.getElementById('activeCount').textContent = `${employees.length} ativos`;
+function stateMessage(text, isError){
+  const el = document.createElement('div');
+  el.className = 'state-msg';
+  if (isError) el.dataset.error = 'true';
+  el.textContent = text;
+  return el;
+}
 
 const root = document.getElementById('root');
-const slots = employees.map(() => document.createElement('div'));
-document.getElementById('grid').append(...slots);
+const gridEl = document.getElementById('grid');
+const activeCountEl = document.getElementById('activeCount');
 
-const glassEls = employees.map(card);
-glassEls.forEach(el => root.appendChild(el));
-
-function place(el, slot){
-  const s = slot.getBoundingClientRect();
-  const r = root.getBoundingClientRect();
-  el.style.position = 'absolute';
-  el.style.top = (s.top - r.top) + 'px';
-  el.style.left = (s.left - r.left) + 'px';
-  el.style.width = s.width + 'px';
-  el.style.zIndex = '2';
+async function fetchEmployees(){
+  const res = await fetch(`${API_BASE}/employees`);
+  if (!res.ok) throw new Error(`API respondeu ${res.status}`);
+  return res.json();
 }
 
-function sync(){
-  glassEls.forEach((el, i) => { slots[i].style.height = el.offsetHeight + 'px'; });
-  glassEls.forEach((el, i) => place(el, slots[i]));
-}
+async function main(){
+  // a API no Render pode "dormir" e demorar pra acordar na primeira
+  // requisição — por isso o aviso de carregando fica visível até chegar
+  // uma resposta (ou erro) de verdade
+  activeCountEl.textContent = 'carregando funcionários...';
 
-window.addEventListener('load', async () => {
+  let employees;
+  try {
+    employees = await fetchEmployees();
+  } catch (err) {
+    console.error('Falha ao buscar funcionários:', err);
+    activeCountEl.textContent = 'não foi possível carregar';
+    gridEl.appendChild(stateMessage('Não foi possível conectar à API. O servidor pode estar iniciando — tente recarregar em alguns segundos.', true));
+    return;
+  }
+
+  if (employees.length === 0){
+    activeCountEl.textContent = '0 ativos';
+    gridEl.appendChild(stateMessage('Nenhum funcionário cadastrado.', false));
+    return;
+  }
+
+  activeCountEl.textContent = `${employees.length} ativos`;
+
+  const slots = employees.map(() => document.createElement('div'));
+  gridEl.append(...slots);
+
+  const glassEls = employees.map(card);
+  glassEls.forEach(el => root.appendChild(el));
+
+  function place(el, slot){
+    const s = slot.getBoundingClientRect();
+    const r = root.getBoundingClientRect();
+    el.style.position = 'absolute';
+    el.style.top = (s.top - r.top) + 'px';
+    el.style.left = (s.left - r.left) + 'px';
+    el.style.width = s.width + 'px';
+    el.style.zIndex = '2';
+  }
+
+  function sync(){
+    glassEls.forEach((el, i) => { slots[i].style.height = el.offsetHeight + 'px'; });
+    glassEls.forEach((el, i) => place(el, slots[i]));
+  }
+
   sync();
   window.addEventListener('resize', sync);
 
@@ -183,7 +215,9 @@ window.addEventListener('load', async () => {
   } catch(err){
     console.error('LiquidGlass falhou, usando fallback:', err?.message || err);
   }
-});
+}
+
+window.addEventListener('load', main);
 </script>
 </body>
 </html>

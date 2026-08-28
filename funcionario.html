@@ -112,6 +112,7 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 .fb-msg{font-size:14px;line-height:1.55;color:var(--ink);margin:0;white-space:pre-wrap}
 
 .empty-state{padding:32px 20px;text-align:center;color:var(--ink-dim);font-size:13.5px}
+.empty-state[data-error="true"]{color:var(--down)}
 
 .glass-fallback{background:var(--surface);border:1px solid var(--line);border-radius:20px;backdrop-filter:blur(6px)}
 </style>
@@ -176,6 +177,9 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 <script type="module">
 import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
 
+// endereço da API (FastAPI hospedada no Render)
+const API_BASE = 'https://nexo-y481.onrender.com';
+
 const GLASS_PRESET = {blurAmount:0,refraction:0.69,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.3,shadowSpread:10};
 const PROFILE_PRESET = {...GLASS_PRESET,blurAmount:0.12,brightness:-0.08,shadowOpacity:0.45,shadowSpread:14,cornerRadius:24};
 const CARD_PRESET = {...GLASS_PRESET,cornerRadius:16,shadowOpacity:0.25};
@@ -183,44 +187,43 @@ const BUTTON_PRESET = {...GLASS_PRESET,cornerRadius:999,shadowOpacity:0.25,butto
 
 const MAX_MESSAGE_LENGTH = 400;
 
-const employees = [
-  {id:1,name:'Samuel',role:'Assistente Contábil'},
-  {id:2,name:'Sophia',role:'Analista Fiscal'},
-  {id:3,name:'Lucas',role:'Contador Responsável'},
-  {id:4,name:'Murillo',role:'Auxiliar Administrativo'},
-  {id:5,name:'Luis',role:'Analista de Folha de Pagamento'},
-  {id:6,name:'Giovanna',role:'Assistente Fiscal'},
-  {id:7,name:'Felipe',role:'Analista Contábil'},
-  {id:8,name:'Maria Luiza',role:'Recepcionista'},
-  {id:9,name:'Gabriel',role:'Auxiliar Contábil'},
-];
+// -------- chamadas reais à API (substituem os dados fixos de antes) --------
 
-const seedFeedbacks = [
-  {employeeId:1,type:'up',message:'Sempre entrega os relatórios no prazo e ajuda quem tá com dúvida.',timestamp:'2026-08-20T14:32:00'},
-  {employeeId:1,type:'down',message:'Poderia responder mensagens mais rápido durante o fechamento.',timestamp:'2026-08-15T09:10:00'},
-  {employeeId:1,type:'up',message:'Muito atencioso ao explicar as guias de impostos.',timestamp:'2026-08-11T17:45:00'},
-];
+async function fetchEmployee(employeeId){
+  const res = await fetch(`${API_BASE}/employees/${employeeId}`);
+  if (!res.ok) throw new Error(`API respondeu ${res.status} ao buscar funcionário`);
+  return res.json();
+}
+
+async function fetchFeedbacks(employeeId){
+  const res = await fetch(`${API_BASE}/employees/${employeeId}/feedbacks`);
+  if (!res.ok) throw new Error(`API respondeu ${res.status} ao buscar feedbacks`);
+  return res.json();
+}
 
 async function createFeedback(employeeId, payload){
-  return {
-    id: crypto.randomUUID(),
-    employeeId,
-    type: payload.type,
-    message: payload.message,
-    timestamp: new Date().toISOString(),
-  };
+  const res = await fetch(`${API_BASE}/employees/${employeeId}/feedbacks`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`API respondeu ${res.status} ao enviar feedback`);
+  return res.json();
 }
+
+// -------- utilidades --------
 
 function formatTimestamp(iso){
   return new Date(iso).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 
-function resolveEmployee(){
-  const id = Number(new URLSearchParams(location.search).get('id'));
-  return employees.find(e => e.id === id) ?? employees[0];
+function getEmployeeIdFromUrl(){
+  return new URLSearchParams(location.search).get('id');
 }
 
 function sortByRecent(list){
+  // a API já retorna ordenado, mas garantimos aqui também caso o front
+  // insira um feedback novo na lista em memória antes de recarregar
   return [...list].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
 
@@ -295,7 +298,7 @@ function buildBackButton(){
   return el;
 }
 
-function buildProfileCard(employee, stats){
+function buildProfileCard(employee){
   const el = document.createElement('div');
   el.className = 'profile-card';
   el.dataset.config = JSON.stringify(PROFILE_PRESET);
@@ -303,8 +306,8 @@ function buildProfileCard(employee, stats){
   el.querySelector('[data-role="avatar"]').textContent = employee.name[0];
   el.querySelector('[data-role="name"]').textContent = employee.name;
   el.querySelector('[data-role="role"]').textContent = employee.role;
-  el.querySelector('[data-role="up"]').textContent = stats.up;
-  el.querySelector('[data-role="down"]').textContent = stats.down;
+  el.querySelector('[data-role="up"]').textContent = employee.up ?? 0;
+  el.querySelector('[data-role="down"]').textContent = employee.down ?? 0;
   return el;
 }
 
@@ -326,11 +329,12 @@ function buildFeedbackCard(feedback){
   return el;
 }
 
-function buildEmptyState(){
+function buildEmptyState(text, isError){
   const el = document.createElement('div');
   el.className = 'empty-state';
+  if (isError) el.dataset.error = 'true';
   el.dataset.config = JSON.stringify({...GLASS_PRESET,cornerRadius:16,shadowOpacity:0.2});
-  el.textContent = 'Nenhum feedback recebido ainda.';
+  el.textContent = text;
   return el;
 }
 
@@ -381,10 +385,14 @@ class FeedbackComposer {
       this.field.value = '';
       this.setType('up');
       this.refresh();
-    } finally {
-      this.submitBtn.textContent = 'Enviar feedback';
-      this.refresh();
+    } catch (err) {
+      console.error('Falha ao enviar feedback:', err);
+      this.submitBtn.textContent = 'Erro — tente de novo';
+      setTimeout(() => { this.submitBtn.textContent = 'Enviar feedback'; this.refresh(); }, 2200);
+      return;
     }
+    this.submitBtn.textContent = 'Enviar feedback';
+    this.refresh();
   }
 }
 
@@ -402,7 +410,7 @@ class FeedbackFeed {
     this.container.innerHTML = '';
 
     if (feedbacks.length === 0){
-      const empty = buildEmptyState();
+      const empty = buildEmptyState('Nenhum feedback recebido ainda.', false);
       const slot = document.createElement('div');
       this.container.appendChild(slot);
       this.glass.mount(empty, slot);
@@ -418,23 +426,27 @@ class FeedbackFeed {
       this.cards.set(feedback.id ?? feedback.timestamp, card);
     }
   }
+
+  renderError(text){
+    for (const el of this.cards.values()) this.glass.unmount(el);
+    this.cards.clear();
+    this.container.innerHTML = '';
+
+    const errorEl = buildEmptyState(text, true);
+    const slot = document.createElement('div');
+    this.container.appendChild(slot);
+    this.glass.mount(errorEl, slot);
+    this.cards.set('error', errorEl);
+  }
 }
 
 async function main(){
   const root = document.getElementById('root');
-  const employee = resolveEmployee();
-  let feedbacks = sortByRecent(seedFeedbacks.filter(f => f.employeeId === employee.id));
+  const employeeId = getEmployeeIdFromUrl();
 
   const glass = new GlassLayer(root);
   let glassInstance = null;
   let fontsReady = false;
-
-  function countByType(list){
-    return {
-      up: list.filter(f => f.type === 'up').length,
-      down: list.filter(f => f.type === 'down').length,
-    };
-  }
 
   async function reinitGlass(){
     glass.sync();
@@ -462,20 +474,51 @@ async function main(){
   glass.mount(buildBackButton(), document.getElementById('slotBack'), {autoWidth: true});
 
   const profileSlot = document.getElementById('slotProfile');
-  let profileCard = glass.mount(
-    buildProfileCard(employee, countByType(feedbacks)),
-    profileSlot
-  );
+  const feedContainer = document.getElementById('feed');
+  const feed = new FeedbackFeed(root, glass, feedContainer);
 
-  const feed = new FeedbackFeed(root, glass, document.getElementById('feed'));
-  feed.render(feedbacks);
+  if (!employeeId){
+    glass.mount(buildProfileCard({name:'?', role:'Funcionário não especificado', up:0, down:0}), profileSlot);
+    feed.renderError('Nenhum funcionário informado na URL.');
+    await reinitGlass();
+    return;
+  }
+
+  // a API no Render pode estar "dormindo" — a primeira requisição
+  // pode demorar alguns segundos até o serviço acordar
+  let employee;
+  try {
+    employee = await fetchEmployee(employeeId);
+  } catch (err) {
+    console.error('Falha ao buscar funcionário:', err);
+    glass.mount(buildProfileCard({name:'?', role:'Erro ao carregar', up:0, down:0}), profileSlot);
+    feed.renderError('Não foi possível conectar à API. O servidor pode estar iniciando — tente recarregar em alguns segundos.');
+    await reinitGlass();
+    return;
+  }
+
+  let profileCard = glass.mount(buildProfileCard(employee), profileSlot);
+
+  let feedbacks;
+  try {
+    feedbacks = sortByRecent(await fetchFeedbacks(employeeId));
+    feed.render(feedbacks);
+  } catch (err) {
+    console.error('Falha ao buscar feedbacks:', err);
+    feedbacks = [];
+    feed.renderError('Não foi possível carregar os feedbacks agora.');
+  }
 
   new FeedbackComposer(root, glass, document.getElementById('slotComposer'), async ({type, message}) => {
-    const created = await createFeedback(employee.id, {type, message});
+    const created = await createFeedback(employeeId, {type, message});
     feedbacks = sortByRecent([created, ...feedbacks]);
 
+    // recarrega o funcionário pra pegar a contagem up/down atualizada,
+    // que é calculada no backend
+    employee = await fetchEmployee(employeeId);
+
     glass.unmount(profileCard);
-    profileCard = glass.mount(buildProfileCard(employee, countByType(feedbacks)), profileSlot);
+    profileCard = glass.mount(buildProfileCard(employee), profileSlot);
 
     feed.render(feedbacks);
     await reinitGlass();
@@ -490,10 +533,10 @@ async function main(){
     glassInstance?.markChanged();
   });
 
-  window.addEventListener('load', reinitGlass);
+  await reinitGlass();
 }
 
-main();
+window.addEventListener('load', main);
 </script>
 </body>
 </html>

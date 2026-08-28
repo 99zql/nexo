@@ -50,13 +50,20 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 .stat-pill.up{background:rgba(111,174,140,.16);color:var(--up)}
 .stat-pill.down{background:rgba(192,122,107,.16);color:var(--down)}
 
+.divider{
+  border:none;
+  border-top:1px solid var(--line);
+  margin:0 0 32px;
+}
+
 .section-title{font-size:15px;font-weight:600;color:var(--ink-dim);margin:0 0 16px;text-transform:uppercase;letter-spacing:.04em}
 
-.feed{display:flex;flex-direction:column;gap:12px;margin-bottom:40px}
+.feed{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:40px}
 
 .feedback-card{
   display:flex;flex-direction:column;gap:12px;
   padding:18px 20px;
+  width:100%;max-width:640px;
   will-change:transform;
   transition:transform .2s cubic-bezier(.22,1,.36,1);
 }
@@ -104,6 +111,8 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
         <div class="stat-pill down"><span class="icon">▼</span><span id="pDown">0</span></div>
       </div>
     </div>
+
+    <hr class="divider">
 
     <p class="section-title">Feedbacks recebidos</p>
     <div class="feed" id="feed"></div>
@@ -182,6 +191,8 @@ if (empFeedbacks.length === 0){
   cardEls = [empty];
 
   const slot = document.createElement('div');
+  slot.style.width = '100%';
+  slot.style.maxWidth = '640px';
   feedEl.appendChild(slot);
   function placeEmpty(){
     const s = slot.getBoundingClientRect();
@@ -196,7 +207,12 @@ if (empFeedbacks.length === 0){
   window.addEventListener('load', placeEmpty);
   window.addEventListener('resize', placeEmpty);
 } else {
-  const slots = empFeedbacks.map(() => document.createElement('div'));
+  const slots = empFeedbacks.map(() => {
+    const s = document.createElement('div');
+    s.style.width = '100%';
+    s.style.maxWidth = '640px';
+    return s;
+  });
   feedEl.append(...slots);
   cardEls = empFeedbacks.map(feedbackCard);
   cardEls.forEach(el => root.appendChild(el));

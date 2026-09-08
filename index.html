@@ -107,24 +107,24 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 <script type="module">
 import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
 
-// endereço da API (mesmo backend usado no funcionario.html)
+// endereço da API (mesmo backend usado no departamento.html)
 const API_BASE = 'https://nexo-y481.onrender.com';
 
 const cfg = JSON.stringify({blurAmount:0,refraction:0.69,cornerRadius:20,chromAberration:0.05,edgeHighlight:0.05,fresnel:1,shadowOpacity:0.3});
 
-function card(e){
+function card(d){
   const a = document.createElement('a');
-  a.href = `funcionario.html?id=${e.id}`;
+  a.href = `departamento.html?id=${d.id}`;
   a.className = 'card glass-fallback';
   a.dataset.config = cfg;
   a.innerHTML = `
     <div class="who">
-      <div class="avatar">${e.name[0]}</div>
-      <div><p class="name">${e.name}</p><p class="role">${e.role}</p></div>
+      <div class="avatar">${d.name[0]}</div>
+      <div><p class="name">${d.name}</p></div>
     </div>
     <div class="pills">
-      <div class="pill up"><span class="icon">▲</span>${e.up}</div>
-      <div class="pill down"><span class="icon">▼</span>${e.down}</div>
+      <div class="pill up"><span class="icon">▲</span>${d.up}</div>
+      <div class="pill down"><span class="icon">▼</span>${d.down}</div>
     </div>`;
   return a;
 }
@@ -141,8 +141,8 @@ const root = document.getElementById('root');
 const gridEl = document.getElementById('grid');
 const activeCountEl = document.getElementById('activeCount');
 
-async function fetchEmployees(){
-  const res = await fetch(`${API_BASE}/employees`);
+async function fetchDepartments(){
+  const res = await fetch(`${API_BASE}/departments`);
   if (!res.ok) throw new Error(`API respondeu ${res.status}`);
   return res.json();
 }
@@ -151,30 +151,30 @@ async function main(){
   // a API no Render pode "dormir" e demorar pra acordar na primeira
   // requisição — por isso o aviso de carregando fica visível até chegar
   // uma resposta (ou erro) de verdade
-  activeCountEl.textContent = 'carregando funcionários...';
+  activeCountEl.textContent = 'carregando departamentos...';
 
-  let employees;
+  let departments;
   try {
-    employees = await fetchEmployees();
+    departments = await fetchDepartments();
   } catch (err) {
-    console.error('Falha ao buscar funcionários:', err);
+    console.error('Falha ao buscar departamentos:', err);
     activeCountEl.textContent = 'não foi possível carregar';
     gridEl.appendChild(stateMessage('Não foi possível conectar à API. O servidor pode estar iniciando — tente recarregar em alguns segundos.', true));
     return;
   }
 
-  if (employees.length === 0){
-    activeCountEl.textContent = '0 ativos';
-    gridEl.appendChild(stateMessage('Nenhum funcionário cadastrado.', false));
+  if (departments.length === 0){
+    activeCountEl.textContent = '0 departamentos';
+    gridEl.appendChild(stateMessage('Nenhum departamento cadastrado.', false));
     return;
   }
 
-  activeCountEl.textContent = `${employees.length} ativos`;
+  activeCountEl.textContent = `${departments.length} departamentos`;
 
-  const slots = employees.map(() => document.createElement('div'));
+  const slots = departments.map(() => document.createElement('div'));
   gridEl.append(...slots);
 
-  const glassEls = employees.map(card);
+  const glassEls = departments.map(card);
   glassEls.forEach(el => root.appendChild(el));
 
   function place(el, slot){

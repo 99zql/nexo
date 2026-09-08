@@ -175,7 +175,7 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 </div>
 
 <div class="thanks-overlay" id="thanksOverlay">
-  <div class="thanks-card glass-fallback" id="thanksCard" data-config='{"blurAmount":0.2,"refraction":0.69,"cornerRadius":22,"chromAberration":0.05,"edgeHighlight":0.05,"fresnel":1,"brightness":-0.22,"shadowOpacity":0.5,"shadowSpread":18}'>
+  <div class="thanks-card glass-fallback" id="thanksCard" data-config='{"blurAmount":0.32,"refraction":0.55,"cornerRadius":22,"chromAberration":0.03,"edgeHighlight":0.12,"fresnel":1,"brightness":-0.42,"saturation":1.1,"shadowOpacity":0.6,"shadowSpread":22}'>
     <div class="thanks-icon"><i data-lucide="check" class="lucide"></i></div>
     <h2>Obrigado(a) por avaliar!</h2>
     <p id="thanksMsg">Seu feedback ajuda nosso departamento a crescer e a construir um ambiente de trabalho mais saudável para todos.</p>
@@ -231,8 +231,9 @@ const GLASS_PRESET = {blurAmount:0,refraction:0.69,chromAberration:0.05,edgeHigh
 const PROFILE_PRESET = {...GLASS_PRESET,blurAmount:0.12,brightness:-0.08,shadowOpacity:0.45,shadowSpread:14,cornerRadius:24};
 const CARD_PRESET = {...GLASS_PRESET,cornerRadius:16,shadowOpacity:0.25};
 const BUTTON_PRESET = {...GLASS_PRESET,cornerRadius:999,shadowOpacity:0.25,button:true};
-// popup: vidro mais escuro/opaco, já que fica sobre o overlay com blur
-const THANKS_PRESET = {...GLASS_PRESET,blurAmount:0.2,brightness:-0.22,cornerRadius:22,shadowOpacity:0.5,shadowSpread:18};
+// popup: dark liquid glass — bem mais escuro/opaco e com blur real,
+// pra se destacar contra o overlay e combinar com o resto do tema
+const THANKS_PRESET = {...GLASS_PRESET,blurAmount:0.32,brightness:-0.42,saturation:1.1,refraction:0.55,chromAberration:0.03,edgeHighlight:0.12,cornerRadius:22,shadowOpacity:0.6,shadowSpread:22};
 
 const MAX_MESSAGE_LENGTH = 400;
 
@@ -425,6 +426,7 @@ async function ensureThanksGlass(){
 
 function showThanksPopup(){
   thanksOverlay.dataset.open = 'true';
+  lucide.createIcons({ root: thanksCard });
   ensureThanksGlass();
 }
 function hideThanksPopup(){

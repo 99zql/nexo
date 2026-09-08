@@ -231,9 +231,10 @@ const GLASS_PRESET = {blurAmount:0,refraction:0.69,chromAberration:0.05,edgeHigh
 const PROFILE_PRESET = {...GLASS_PRESET,blurAmount:0.12,brightness:-0.08,shadowOpacity:0.45,shadowSpread:14,cornerRadius:24};
 const CARD_PRESET = {...GLASS_PRESET,cornerRadius:16,shadowOpacity:0.25};
 const BUTTON_PRESET = {...GLASS_PRESET,cornerRadius:999,shadowOpacity:0.25,button:true};
-// popup: dark liquid glass — bem mais escuro/opaco e com blur real,
-// pra se destacar contra o overlay e combinar com o resto do tema
-const THANKS_PRESET = {...GLASS_PRESET,blurAmount:0.32,brightness:-0.42,saturation:1.1,refraction:0.55,chromAberration:0.03,edgeHighlight:0.12,cornerRadius:22,shadowOpacity:0.6,shadowSpread:22};
+// popup: dark liquid glass — mesmo motor dos outros cards, só que mais
+// escuro/opaco (brightness negativo + blur maior) pra se destacar sobre
+// o overlay
+const THANKS_PRESET = {...GLASS_PRESET,blurAmount:0.32,brightness:-0.35,saturation:0.15,cornerRadius:22,shadowOpacity:0.55,shadowSpread:18};
 
 const MAX_MESSAGE_LENGTH = 400;
 
@@ -412,14 +413,23 @@ let thanksGlassReady = false;
 async function ensureThanksGlass(){
   if (thanksGlassReady) return;
   thanksGlassReady = true;
+
+  try { await document.fonts.ready; } catch (err) {}
+  // espera a transição de opacidade do overlay terminar antes de deixar
+  // a lib capturar a cena, senão ela pode pegar um frame ainda
+  // transparente e cair no fallback
+  await new Promise(resolve => setTimeout(resolve, 280));
+
   try {
-    await LiquidGlass.init({
+    const instance = await LiquidGlass.init({
       root: thanksOverlay,
       glassElements: [thanksCard],
       defaults: THANKS_PRESET,
     });
     thanksCard.classList.remove('glass-fallback');
+    instance.markChanged();
   } catch (err) {
+    thanksGlassReady = false;
     console.error('LiquidGlass falhou no popup, usando fallback:', err?.message || err);
   }
 }

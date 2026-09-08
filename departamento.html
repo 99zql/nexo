@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXO — Perfil do Funcionário</title>
+<title>NEXO — Perfil do Departamento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -115,6 +115,46 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 .empty-state[data-error="true"]{color:var(--down)}
 
 .glass-fallback{background:var(--surface);border:1px solid var(--line);border-radius:20px;backdrop-filter:blur(6px)}
+
+/* ---- popup de agradecimento ---- */
+.thanks-overlay{
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background:rgba(4,6,5,.45);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease;
+}
+.thanks-overlay[data-open="true"]{opacity:1;pointer-events:auto}
+
+.thanks-card{
+  width:100%;max-width:380px;
+  padding:32px 28px;text-align:center;
+  background:rgba(20,24,22,.55);
+  border:1px solid var(--line);border-radius:22px;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  transform:translateY(12px) scale(.97);
+  transition:transform .28s cubic-bezier(.22,1,.36,1);
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.thanks-overlay[data-open="true"] .thanks-card{transform:translateY(0) scale(1)}
+
+.thanks-icon{
+  width:52px;height:52px;margin:0 auto 16px;border-radius:50%;
+  background:rgba(111,174,140,.16);color:var(--up);
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+}
+.thanks-card h2{font-size:18px;font-weight:700;margin:0 0 10px}
+.thanks-card p{font-size:13.5px;line-height:1.55;color:var(--ink-dim);margin:0 0 22px}
+
+.thanks-close{
+  padding:10px 24px;border:none;border-radius:999px;cursor:pointer;
+  background:var(--ink);color:#0a0d0c;font-family:inherit;font-size:13.5px;font-weight:700;
+  transition:transform .18s cubic-bezier(.22,1,.36,1);
+}
+.thanks-close:hover{transform:scale(1.04)}
+.thanks-close:active{transform:scale(.97)}
 </style>
 </head>
 <body>
@@ -136,11 +176,19 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
   </div>
 </div>
 
+<div class="thanks-overlay" id="thanksOverlay">
+  <div class="thanks-card">
+    <div class="thanks-icon">✓</div>
+    <h2>Obrigado(a) por avaliar!</h2>
+    <p id="thanksMsg">Seu feedback ajuda nosso departamento a crescer e a construir um ambiente de trabalho mais saudável para todos.</p>
+    <button type="button" class="thanks-close" id="thanksClose">Fechar</button>
+  </div>
+</div>
+
 <template id="tpl-profile">
   <div class="avatar avatar-lg" data-role="avatar"></div>
   <div class="profile-info">
     <h1 data-role="name"></h1>
-    <p data-role="role"></p>
   </div>
   <div class="profile-stats">
     <div class="pill up"><span class="icon">▲</span><span data-role="up">0</span></div>
@@ -187,22 +235,22 @@ const BUTTON_PRESET = {...GLASS_PRESET,cornerRadius:999,shadowOpacity:0.25,butto
 
 const MAX_MESSAGE_LENGTH = 400;
 
-// -------- chamadas reais à API (substituem os dados fixos de antes) --------
+// -------- chamadas reais à API --------
 
-async function fetchEmployee(employeeId){
-  const res = await fetch(`${API_BASE}/employees/${employeeId}`);
-  if (!res.ok) throw new Error(`API respondeu ${res.status} ao buscar funcionário`);
+async function fetchDepartment(departmentId){
+  const res = await fetch(`${API_BASE}/departments/${departmentId}`);
+  if (!res.ok) throw new Error(`API respondeu ${res.status} ao buscar departamento`);
   return res.json();
 }
 
-async function fetchFeedbacks(employeeId){
-  const res = await fetch(`${API_BASE}/employees/${employeeId}/feedbacks`);
+async function fetchFeedbacks(departmentId){
+  const res = await fetch(`${API_BASE}/departments/${departmentId}/feedbacks`);
   if (!res.ok) throw new Error(`API respondeu ${res.status} ao buscar feedbacks`);
   return res.json();
 }
 
-async function createFeedback(employeeId, payload){
-  const res = await fetch(`${API_BASE}/employees/${employeeId}/feedbacks`, {
+async function createFeedback(departmentId, payload){
+  const res = await fetch(`${API_BASE}/departments/${departmentId}/feedbacks`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(payload),
@@ -217,7 +265,7 @@ function formatTimestamp(iso){
   return new Date(iso).toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 
-function getEmployeeIdFromUrl(){
+function getDepartmentIdFromUrl(){
   return new URLSearchParams(location.search).get('id');
 }
 
@@ -237,12 +285,18 @@ class GlassLayer {
     el.classList.add('glass-fallback');
     this.root.appendChild(el);
     this.entries.push({el, slot, autoWidth: !!options.autoWidth});
+    // posiciona/dimensiona imediatamente, sem esperar o próximo sync()
+    // assíncrono — evita que o layout fique "quebrado" entre o mount
+    // e o reinit do LiquidGlass (era a causa do card ir parar embaixo
+    // da página até dar zoom/forçar reflow).
+    this.sync();
     return el;
   }
 
   unmount(el){
     this.entries = this.entries.filter(entry => entry.el !== el);
     el.remove();
+    this.sync();
   }
 
   measureNatural(el){
@@ -269,7 +323,8 @@ class GlassLayer {
   }
 
   sync(){
-    const pageWidth = document.querySelector('.page').clientWidth;
+    const pageEl = document.querySelector('.page');
+    const pageWidth = pageEl.clientWidth;
 
     for (const entry of this.entries){
       if (entry.autoWidth){
@@ -282,6 +337,17 @@ class GlassLayer {
       }
     }
     for (const entry of this.entries) this.place(entry);
+
+    // os cards ficam position:absolute, ou seja, fora do fluxo normal —
+    // sem isso o #root/.page não sabem o quão "alto" o conteúdo real é
+    // e a página pode colapsar, empurrando tudo pra baixo do viewport
+    // (só "resolvia" com zoom porque isso forçava um reflow/resize).
+    let maxBottom = 0;
+    for (const entry of this.entries){
+      const bottom = entry.el.offsetTop + entry.el.offsetHeight;
+      if (bottom > maxBottom) maxBottom = bottom;
+    }
+    if (maxBottom > 0) this.root.style.minHeight = `${maxBottom + 60}px`;
   }
 
   elements(){
@@ -298,16 +364,15 @@ function buildBackButton(){
   return el;
 }
 
-function buildProfileCard(employee){
+function buildProfileCard(department){
   const el = document.createElement('div');
   el.className = 'profile-card';
   el.dataset.config = JSON.stringify(PROFILE_PRESET);
   el.appendChild(document.getElementById('tpl-profile').content.cloneNode(true));
-  el.querySelector('[data-role="avatar"]').textContent = employee.name[0];
-  el.querySelector('[data-role="name"]').textContent = employee.name;
-  el.querySelector('[data-role="role"]').textContent = employee.role;
-  el.querySelector('[data-role="up"]').textContent = employee.up ?? 0;
-  el.querySelector('[data-role="down"]').textContent = employee.down ?? 0;
+  el.querySelector('[data-role="avatar"]').textContent = department.name[0];
+  el.querySelector('[data-role="name"]').textContent = department.name;
+  el.querySelector('[data-role="up"]').textContent = department.up ?? 0;
+  el.querySelector('[data-role="down"]').textContent = department.down ?? 0;
   return el;
 }
 
@@ -337,6 +402,25 @@ function buildEmptyState(text, isError){
   el.textContent = text;
   return el;
 }
+
+// -------- popup de agradecimento --------
+
+const thanksOverlay = document.getElementById('thanksOverlay');
+const thanksClose = document.getElementById('thanksClose');
+
+function showThanksPopup(){
+  thanksOverlay.dataset.open = 'true';
+}
+function hideThanksPopup(){
+  thanksOverlay.dataset.open = 'false';
+}
+thanksClose.addEventListener('click', hideThanksPopup);
+thanksOverlay.addEventListener('click', (ev) => {
+  if (ev.target === thanksOverlay) hideThanksPopup();
+});
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape') hideThanksPopup();
+});
 
 class FeedbackComposer {
   constructor(root, glass, slot, onSubmit){
@@ -385,6 +469,7 @@ class FeedbackComposer {
       this.field.value = '';
       this.setType('up');
       this.refresh();
+      showThanksPopup();
     } catch (err) {
       console.error('Falha ao enviar feedback:', err);
       this.submitBtn.textContent = 'Erro — tente de novo';
@@ -442,7 +527,7 @@ class FeedbackFeed {
 
 async function main(){
   const root = document.getElementById('root');
-  const employeeId = getEmployeeIdFromUrl();
+  const departmentId = getDepartmentIdFromUrl();
 
   const glass = new GlassLayer(root);
   let glassInstance = null;
@@ -469,6 +554,11 @@ async function main(){
     } catch (err) {
       console.error('LiquidGlass falhou, usando fallback:', err?.message || err);
     }
+
+    // o reinit do LiquidGlass pode alterar levemente as dimensões dos
+    // elementos (bordas, sombras); sincroniza de novo pra garantir que
+    // o #root reflita a altura final.
+    glass.sync();
   }
 
   glass.mount(buildBackButton(), document.getElementById('slotBack'), {autoWidth: true});
@@ -477,31 +567,31 @@ async function main(){
   const feedContainer = document.getElementById('feed');
   const feed = new FeedbackFeed(root, glass, feedContainer);
 
-  if (!employeeId){
-    glass.mount(buildProfileCard({name:'?', role:'Funcionário não especificado', up:0, down:0}), profileSlot);
-    feed.renderError('Nenhum funcionário informado na URL.');
+  if (!departmentId){
+    glass.mount(buildProfileCard({name:'?', up:0, down:0}), profileSlot);
+    feed.renderError('Nenhum departamento informado na URL.');
     await reinitGlass();
     return;
   }
 
   // a API no Render pode estar "dormindo" — a primeira requisição
   // pode demorar alguns segundos até o serviço acordar
-  let employee;
+  let department;
   try {
-    employee = await fetchEmployee(employeeId);
+    department = await fetchDepartment(departmentId);
   } catch (err) {
-    console.error('Falha ao buscar funcionário:', err);
-    glass.mount(buildProfileCard({name:'?', role:'Erro ao carregar', up:0, down:0}), profileSlot);
+    console.error('Falha ao buscar departamento:', err);
+    glass.mount(buildProfileCard({name:'Erro ao carregar', up:0, down:0}), profileSlot);
     feed.renderError('Não foi possível conectar à API. O servidor pode estar iniciando — tente recarregar em alguns segundos.');
     await reinitGlass();
     return;
   }
 
-  let profileCard = glass.mount(buildProfileCard(employee), profileSlot);
+  let profileCard = glass.mount(buildProfileCard(department), profileSlot);
 
   let feedbacks;
   try {
-    feedbacks = sortByRecent(await fetchFeedbacks(employeeId));
+    feedbacks = sortByRecent(await fetchFeedbacks(departmentId));
     feed.render(feedbacks);
   } catch (err) {
     console.error('Falha ao buscar feedbacks:', err);
@@ -510,15 +600,15 @@ async function main(){
   }
 
   new FeedbackComposer(root, glass, document.getElementById('slotComposer'), async ({type, message}) => {
-    const created = await createFeedback(employeeId, {type, message});
+    const created = await createFeedback(departmentId, {type, message});
     feedbacks = sortByRecent([created, ...feedbacks]);
 
-    // recarrega o funcionário pra pegar a contagem up/down atualizada,
+    // recarrega o departamento pra pegar a contagem up/down atualizada,
     // que é calculada no backend
-    employee = await fetchEmployee(employeeId);
+    department = await fetchDepartment(departmentId);
 
     glass.unmount(profileCard);
-    profileCard = glass.mount(buildProfileCard(employee), profileSlot);
+    profileCard = glass.mount(buildProfileCard(department), profileSlot);
 
     feed.render(feedbacks);
     await reinitGlass();

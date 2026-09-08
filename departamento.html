@@ -326,6 +326,9 @@ class GlassLayer {
     const pageEl = document.querySelector('.page');
     const pageWidth = pageEl.clientWidth;
 
+    // 1ª passada: mede a altura natural de cada glass e aplica no slot
+    // correspondente (o slot é um <div> normal, dentro do fluxo — é
+    // ele quem faz o .page/#root "crescerem" de verdade).
     for (const entry of this.entries){
       if (entry.autoWidth){
         const {width, height} = this.measureNatural(entry.el);
@@ -333,21 +336,15 @@ class GlassLayer {
         entry.slot.style.height = `${height}px`;
       } else {
         entry.el.style.width = `${pageWidth}px`;
-        entry.slot.style.height = `${entry.el.offsetHeight}px`;
+        const height = this.measureNatural(entry.el).height;
+        entry.slot.style.height = `${height}px`;
       }
     }
+    // 2ª passada: com todos os slots já na altura final, posiciona os
+    // glasses (absolute) exatamente em cima de cada slot. Precisa ser
+    // uma passada separada porque mudar a altura de um slot acima
+    // desloca a posição de todos os slots abaixo dele.
     for (const entry of this.entries) this.place(entry);
-
-    // os cards ficam position:absolute, ou seja, fora do fluxo normal —
-    // sem isso o #root/.page não sabem o quão "alto" o conteúdo real é
-    // e a página pode colapsar, empurrando tudo pra baixo do viewport
-    // (só "resolvia" com zoom porque isso forçava um reflow/resize).
-    let maxBottom = 0;
-    for (const entry of this.entries){
-      const bottom = entry.el.offsetTop + entry.el.offsetHeight;
-      if (bottom > maxBottom) maxBottom = bottom;
-    }
-    if (maxBottom > 0) this.root.style.minHeight = `${maxBottom + 60}px`;
   }
 
   elements(){

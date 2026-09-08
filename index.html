@@ -121,7 +121,7 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
   </div>
 </div>
 
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.js"></script>
 <script type="module">
 import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
 
@@ -159,8 +159,6 @@ const root = document.getElementById('root');
 const gridEl = document.getElementById('grid');
 const activeCountEl = document.getElementById('activeCount');
 const repoLink = document.querySelector('.repo-link');
-
-lucide.createIcons();
 
 async function fetchDepartments(){
   const res = await fetch(`${API_BASE}/departments`);
@@ -227,6 +225,8 @@ async function main(){
 
   sync();
   window.addEventListener('resize', sync);
+
+  lucide.createIcons();
 
   try { await document.fonts.ready; } catch(e){}
 

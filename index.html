@@ -79,6 +79,18 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 .logo-wrap img{height:150px;width:auto;opacity:.95}
 @media (max-width:600px){.logo-wrap img{height:80px}}
 
+.repo-wrap{width:100%;display:flex;justify-content:center;margin-top:24px}
+.repo-link{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:10px 18px;text-decoration:none;color:var(--ink);
+  font-size:13.5px;font-weight:600;
+  transition:transform .18s cubic-bezier(.22,1,.36,1);
+}
+.repo-link:hover{transform:scale(1.03)}
+.repo-link:active{transform:scale(.98)}
+.repo-link .lucide{width:17px;height:17px;flex-shrink:0}
+.repo-link .lucide-check{color:var(--up)}
+
 .state-msg{padding:20px;text-align:center;color:var(--ink-dim);font-size:13.5px;grid-column:1/-1}
 .state-msg[data-error="true"]{color:var(--down)}
 </style>
@@ -101,9 +113,18 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 
     <div class="logo-wrap"><img src="assets/logo.png" alt="NEXO"></div>
 
+    <div class="repo-wrap">
+      <a class="repo-link glass-fallback" data-config='{"blurAmount":0,"refraction":0.69,"cornerRadius":999,"chromAberration":0.05,"edgeHighlight":0.05,"fresnel":1,"shadowOpacity":0.25}' href="https://github.com/99zql/nexo" target="_blank" rel="noopener">
+        <i data-lucide="github" class="lucide"></i>
+        <span>Código no GitHub</span>
+        <i data-lucide="check" class="lucide lucide-check"></i>
+      </a>
+    </div>
+
   </div>
 </div>
 
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <script type="module">
 import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
 
@@ -140,6 +161,9 @@ function stateMessage(text, isError){
 const root = document.getElementById('root');
 const gridEl = document.getElementById('grid');
 const activeCountEl = document.getElementById('activeCount');
+const repoLink = document.querySelector('.repo-link');
+
+lucide.createIcons();
 
 async function fetchDepartments(){
   const res = await fetch(`${API_BASE}/departments`);
@@ -174,22 +198,35 @@ async function main(){
   const slots = departments.map(() => document.createElement('div'));
   gridEl.append(...slots);
 
-  const glassEls = departments.map(card);
-  glassEls.forEach(el => root.appendChild(el));
+  const cardEls = departments.map(card);
+  cardEls.forEach(el => root.appendChild(el));
 
-  function place(el, slot){
+  // o botão do repositório fica fora do grid, então tem seu próprio
+  // slot (marcador de posição) — a largura acompanha o conteúdo
+  // (autoWidth), diferente dos cards que ocupam a largura do slot.
+  const repoSlot = document.createElement('div');
+  repoLink.parentElement.replaceChild(repoSlot, repoLink);
+  root.appendChild(repoLink);
+
+  const glassEls = [...cardEls, repoLink];
+
+  function place(el, slot, autoWidth){
     const s = slot.getBoundingClientRect();
     const r = root.getBoundingClientRect();
     el.style.position = 'absolute';
     el.style.top = (s.top - r.top) + 'px';
     el.style.left = (s.left - r.left) + 'px';
-    el.style.width = s.width + 'px';
+    if (!autoWidth) el.style.width = s.width + 'px';
     el.style.zIndex = '2';
   }
 
   function sync(){
-    glassEls.forEach((el, i) => { slots[i].style.height = el.offsetHeight + 'px'; });
-    glassEls.forEach((el, i) => place(el, slots[i]));
+    cardEls.forEach((el, i) => { slots[i].style.height = el.offsetHeight + 'px'; });
+    cardEls.forEach((el, i) => place(el, slots[i], false));
+
+    repoSlot.style.width = repoLink.offsetWidth + 'px';
+    repoSlot.style.height = repoLink.offsetHeight + 'px';
+    place(repoLink, repoSlot, true);
   }
 
   sync();

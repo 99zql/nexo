@@ -40,16 +40,16 @@ def start_keep_alive():
         threading.Thread(target=keep_alive, daemon=True).start()
 
 
-employees = {
-    "1": {"id": "1", "name": "Samuel", "role": "Assistente Contábil"},
-    "2": {"id": "2", "name": "Sophia", "role": "Analista Fiscal"},
-    "3": {"id": "3", "name": "Lucas", "role": "Contador Responsável"},
-    "4": {"id": "4", "name": "Murillo", "role": "Auxiliar Administrativo"},
-    "5": {"id": "5", "name": "Luis", "role": "Analista de Folha de Pagamento"},
-    "6": {"id": "6", "name": "Giovanna", "role": "Assistente Fiscal"},
-    "7": {"id": "7", "name": "Felipe", "role": "Analista Contábil"},
-    "8": {"id": "8", "name": "Maria Luiza", "role": "Recepcionista"},
-    "9": {"id": "9", "name": "Gabriel", "role": "Auxiliar Contábil"},
+departments = {
+    "1": {"id": "1", "name": "Contabilidade Fiscal"},
+    "2": {"id": "2", "name": "Departamento Pessoal"},
+    "3": {"id": "3", "name": "Contabilidade Societária"},
+    "4": {"id": "4", "name": "Administrativo"},
+    "5": {"id": "5", "name": "Folha de Pagamento"},
+    "6": {"id": "6", "name": "Fiscal"},
+    "7": {"id": "7", "name": "Contábil"},
+    "8": {"id": "8", "name": "Recepção"},
+    "9": {"id": "9", "name": "Auxiliar Contábil"},
 }
 
 feedbacks = []
@@ -60,13 +60,13 @@ class FeedbackIn(BaseModel):
     message: str = Field(min_length=1, max_length=400)
 
 
-def employee_with_counts(employee_id: str) -> dict:
-    employee = employees[employee_id]
-    employee_feedbacks = [f for f in feedbacks if f["employee_id"] == employee_id]
+def department_with_counts(department_id: str) -> dict:
+    department = departments[department_id]
+    department_feedbacks = [f for f in feedbacks if f["department_id"] == department_id]
     return {
-        **employee,
-        "up": sum(1 for f in employee_feedbacks if f["type"] == "up"),
-        "down": sum(1 for f in employee_feedbacks if f["type"] == "down"),
+        **department,
+        "up": sum(1 for f in department_feedbacks if f["type"] == "up"),
+        "down": sum(1 for f in department_feedbacks if f["type"] == "down"),
     }
 
 
@@ -75,34 +75,34 @@ def root():
     return {"status": "ok"}
 
 
-@app.get("/employees")
-def get_employees():
-    return [employee_with_counts(eid) for eid in employees]
+@app.get("/departments")
+def get_departments():
+    return [department_with_counts(did) for did in departments]
 
 
-@app.get("/employees/{employee_id}")
-def get_employee(employee_id: str):
-    if employee_id not in employees:
-        raise HTTPException(status_code=404, detail="Funcionário não encontrado")
-    return employee_with_counts(employee_id)
+@app.get("/departments/{department_id}")
+def get_department(department_id: str):
+    if department_id not in departments:
+        raise HTTPException(status_code=404, detail="Departamento não encontrado")
+    return department_with_counts(department_id)
 
 
-@app.get("/employees/{employee_id}/feedbacks")
-def get_feedbacks(employee_id: str):
-    if employee_id not in employees:
-        raise HTTPException(status_code=404, detail="Funcionário não encontrado")
-    employee_feedbacks = [f for f in feedbacks if f["employee_id"] == employee_id]
-    return sorted(employee_feedbacks, key=lambda f: f["timestamp"], reverse=True)
+@app.get("/departments/{department_id}/feedbacks")
+def get_feedbacks(department_id: str):
+    if department_id not in departments:
+        raise HTTPException(status_code=404, detail="Departamento não encontrado")
+    department_feedbacks = [f for f in feedbacks if f["department_id"] == department_id]
+    return sorted(department_feedbacks, key=lambda f: f["timestamp"], reverse=True)
 
 
-@app.post("/employees/{employee_id}/feedbacks", status_code=201)
-def create_feedback(employee_id: str, payload: FeedbackIn):
-    if employee_id not in employees:
-        raise HTTPException(status_code=404, detail="Funcionário não encontrado")
+@app.post("/departments/{department_id}/feedbacks", status_code=201)
+def create_feedback(department_id: str, payload: FeedbackIn):
+    if department_id not in departments:
+        raise HTTPException(status_code=404, detail="Departamento não encontrado")
 
     feedback = {
         "id": str(uuid.uuid4()),
-        "employee_id": employee_id,
+        "department_id": department_id,
         "type": payload.type,
         "message": payload.message,
         "timestamp": datetime.utcnow().isoformat(),

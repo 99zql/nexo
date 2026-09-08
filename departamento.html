@@ -116,13 +116,13 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 
 .glass-fallback{background:var(--surface);border:1px solid var(--line);border-radius:20px;backdrop-filter:blur(6px)}
 
-/* ---- popup de agradecimento ---- */
+/* ---- popup de agradecimento (liquidglass, dark) ---- */
 .thanks-overlay{
   position:fixed;inset:0;z-index:50;
   display:flex;align-items:center;justify-content:center;
   padding:24px;
-  background:rgba(4,6,5,.45);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background:rgba(2,3,3,.6);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   opacity:0;pointer-events:none;
   transition:opacity .25s ease;
 }
@@ -131,20 +131,18 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 .thanks-card{
   width:100%;max-width:380px;
   padding:32px 28px;text-align:center;
-  background:rgba(20,24,22,.55);
-  border:1px solid var(--line);border-radius:22px;
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  color:var(--ink);
   transform:translateY(12px) scale(.97);
   transition:transform .28s cubic-bezier(.22,1,.36,1);
-  box-shadow:0 20px 60px rgba(0,0,0,.4);
 }
 .thanks-overlay[data-open="true"] .thanks-card{transform:translateY(0) scale(1)}
 
 .thanks-icon{
   width:52px;height:52px;margin:0 auto 16px;border-radius:50%;
   background:rgba(111,174,140,.16);color:var(--up);
-  display:flex;align-items:center;justify-content:center;font-size:24px;
+  display:flex;align-items:center;justify-content:center;
 }
+.thanks-icon .lucide{width:24px;height:24px}
 .thanks-card h2{font-size:18px;font-weight:700;margin:0 0 10px}
 .thanks-card p{font-size:13.5px;line-height:1.55;color:var(--ink-dim);margin:0 0 22px}
 
@@ -177,8 +175,8 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 </div>
 
 <div class="thanks-overlay" id="thanksOverlay">
-  <div class="thanks-card">
-    <div class="thanks-icon">✓</div>
+  <div class="thanks-card glass-fallback" id="thanksCard" data-config='{"blurAmount":0.2,"refraction":0.69,"cornerRadius":22,"chromAberration":0.05,"edgeHighlight":0.05,"fresnel":1,"brightness":-0.22,"shadowOpacity":0.5,"shadowSpread":18}'>
+    <div class="thanks-icon"><i data-lucide="check" class="lucide"></i></div>
     <h2>Obrigado(a) por avaliar!</h2>
     <p id="thanksMsg">Seu feedback ajuda nosso departamento a crescer e a construir um ambiente de trabalho mais saudável para todos.</p>
     <button type="button" class="thanks-close" id="thanksClose">Fechar</button>
@@ -222,6 +220,7 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
   <p class="fb-msg" data-role="message"></p>
 </template>
 
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <script type="module">
 import { LiquidGlass } from 'https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js';
 
@@ -232,6 +231,8 @@ const GLASS_PRESET = {blurAmount:0,refraction:0.69,chromAberration:0.05,edgeHigh
 const PROFILE_PRESET = {...GLASS_PRESET,blurAmount:0.12,brightness:-0.08,shadowOpacity:0.45,shadowSpread:14,cornerRadius:24};
 const CARD_PRESET = {...GLASS_PRESET,cornerRadius:16,shadowOpacity:0.25};
 const BUTTON_PRESET = {...GLASS_PRESET,cornerRadius:999,shadowOpacity:0.25,button:true};
+// popup: vidro mais escuro/opaco, já que fica sobre o overlay com blur
+const THANKS_PRESET = {...GLASS_PRESET,blurAmount:0.2,brightness:-0.22,cornerRadius:22,shadowOpacity:0.5,shadowSpread:18};
 
 const MAX_MESSAGE_LENGTH = 400;
 
@@ -400,13 +401,33 @@ function buildEmptyState(text, isError){
   return el;
 }
 
-// -------- popup de agradecimento --------
+// -------- popup de agradecimento (liquidglass, dark) --------
+
+lucide.createIcons();
 
 const thanksOverlay = document.getElementById('thanksOverlay');
+const thanksCard = document.getElementById('thanksCard');
 const thanksClose = document.getElementById('thanksClose');
+
+let thanksGlassReady = false;
+async function ensureThanksGlass(){
+  if (thanksGlassReady) return;
+  thanksGlassReady = true;
+  try {
+    await LiquidGlass.init({
+      root: thanksOverlay,
+      glassElements: [thanksCard],
+      defaults: THANKS_PRESET,
+    });
+    thanksCard.classList.remove('glass-fallback');
+  } catch (err) {
+    console.error('LiquidGlass falhou no popup, usando fallback:', err?.message || err);
+  }
+}
 
 function showThanksPopup(){
   thanksOverlay.dataset.open = 'true';
+  ensureThanksGlass();
 }
 function hideThanksPopup(){
   thanksOverlay.dataset.open = 'false';

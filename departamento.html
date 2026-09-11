@@ -170,10 +170,10 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
 
     <hr class="divider">
 
-    <p class="section-title">Deixar um feedback</p>
+    <p class="section-title">Deixar uma avaliação</p>
     <div class="slot-composer" id="slotComposer"></div>
 
-    <p class="section-title">Feedbacks recebidos</p>
+    <p class="section-title">Avaliações recebidas</p>
     <div class="feed" id="feed"></div>
   </div>
 </div>
@@ -182,7 +182,7 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
   <div class="thanks-card" id="thanksCard">
     <div class="thanks-icon"><i data-lucide="check" class="lucide"></i></div>
     <h2>Obrigado(a) por avaliar!</h2>
-    <p id="thanksMsg">Seu feedback ajuda nosso departamento a crescer e a construir um ambiente de trabalho mais saudável para todos.</p>
+    <p id="thanksMsg">Sua avaliação ajuda nosso departamento a crescer e a construir um ambiente de trabalho mais saudável para todos.</p>
     <button type="button" class="thanks-close" id="thanksClose">Fechar</button>
   </div>
 </div>
@@ -203,10 +203,10 @@ html,body{margin:0;min-height:100vh;background:#050807;color:var(--ink);font-fam
     <button type="button" class="composer-tab up" data-type="up" data-active="true"><span class="icon">▲</span>Positivo</button>
     <button type="button" class="composer-tab down" data-type="down"><span class="icon">▼</span>Negativo</button>
   </div>
-  <textarea class="composer-field" data-role="message" maxlength="400" placeholder="Escreva seu feedback de forma anônima..."></textarea>
+  <textarea class="composer-field" data-role="message" maxlength="400" placeholder="Escreva sua avaliação de forma anônima..."></textarea>
   <div class="composer-footer">
     <span class="composer-hint" data-role="hint">0 / 400</span>
-    <button type="button" class="composer-submit" data-role="submit" disabled>Enviar feedback</button>
+    <button type="button" class="composer-submit" data-role="submit" disabled>Enviar avaliação</button>
   </div>
 </template>
 
@@ -497,7 +497,7 @@ class FeedbackFeed {
     this.container.innerHTML = '';
 
     if (feedbacks.length === 0){
-      const empty = buildEmptyState('Nenhum feedback recebido ainda.', false);
+      const empty = buildEmptyState('Nenhuma avaliação recebida ainda.', false);
       const slot = document.createElement('div');
       this.container.appendChild(slot);
       this.glass.mount(empty, slot);
@@ -598,9 +598,9 @@ async function main(){
     feedbacks = sortByRecent(await fetchFeedbacks(departmentId));
     feed.render(feedbacks);
   } catch (err) {
-    console.error('Falha ao buscar feedbacks:', err);
+    console.error('Falha ao buscar avaliações:', err);
     feedbacks = [];
-    feed.renderError('Não foi possível carregar os feedbacks agora.');
+    feed.renderError('Não foi possível carregar as avaliações agora.');
   }
 
   new FeedbackComposer(root, glass, document.getElementById('slotComposer'), async ({type, message}) => {
